@@ -124,7 +124,7 @@
       <div class="btn-group" id="study-controls">
         <button id="show-answer-btn" onclick="showAnswer()">정답 확인</button>
         <div id="result-btns" style="display:none; gap:8px;">
-          <button style="background:var(--danger); flex:1;" onclick="submitResult(false)">❌ 틀림 (내일 재복습)</button>
+          <button style="background:var(--danger); flex:1;" onclick="submitResult(false)">❌ 틀림 (다시 도전)</button>
           <button style="background:var(--success); flex:1;" onclick="submitResult(true)">⭕ 맞음 (다음 단계)</button>
         </div>
       </div>
@@ -163,7 +163,13 @@
     function closeModal(id) { document.getElementById(id).style.display = 'none'; updateDashboard(); }
 
     function importJSON() {
-      const input = document.getElementById('json-input').value;
+      let input = document.getElementById('json-input').value;
+      input = input.trim()
+        .replace(/[\u201C\u201D\u2033]/g, '"')
+        .replace(/[\u2018\u2019]/g, "'")
+        .replace(/^```(json)?/i, '')
+        .replace(/```$/, '')
+        .trim();
       try {
         const data = JSON.parse(input);
         const today = getTodayString();
@@ -190,7 +196,7 @@
         document.getElementById('json-input').value = '';
         closeModal('add-modal');
       } catch (e) {
-        alert("JSON 형식이 올바르지 않습니다. AI 프롬프트 서식을 확인해주세요.");
+        alert("JSON 오류: " + e.message + "\n\n입력된 글자 수: " + input.length);
       }
     }
 
@@ -256,6 +262,11 @@
         nextDate.setDate(nextDate.getDate() + nextDays);
         dbItem.nextReview = nextDate.toISOString().split('T')[0];
         saveData();
+      }
+
+      if (!isCorrect) {
+        // 틀린 문제는 이번 세션이 끝나기 전에 다시 만날 수 있도록 목록 맨 뒤에 재등록
+        currentStudyList.push(item);
       }
 
       currentIndex++;
