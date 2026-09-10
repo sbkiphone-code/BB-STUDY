@@ -63,6 +63,7 @@
     </div>
     <div class="btn-group">
       <button onclick="startStudy('vocab')">오늘의 복습 시작하기</button>
+      <button class="secondary" onclick="startPractice('vocab')">🔁 자유 연습 (스케줄 영향 없음)</button>
     </div>
   </div>
 
@@ -75,6 +76,7 @@
     </div>
     <div class="btn-group">
       <button onclick="startStudy('hanja')">오늘의 복습 시작하기</button>
+      <button class="secondary" onclick="startPractice('hanja')">🔁 자유 연습 (스케줄 영향 없음)</button>
     </div>
   </div>
 
@@ -87,6 +89,7 @@
     </div>
     <div class="btn-group">
       <button onclick="startStudy('grammar')">오늘의 복습 시작하기</button>
+      <button class="secondary" onclick="startPractice('grammar')">🔁 자유 연습 (스케줄 영향 없음)</button>
     </div>
   </div>
 
@@ -139,6 +142,7 @@
     let db = JSON.parse(localStorage.getItem('forgetting_curve_data')) || [];
     let currentStudyList = [];
     let currentIndex = 0;
+    let practiceMode = false; // true면 스케줄(stage/nextReview)에 영향 안 줌
 
     function saveData() {
       localStorage.setItem('forgetting_curve_data', JSON.stringify(db));
@@ -202,6 +206,7 @@
 
     function startStudy(type) {
       const today = getTodayString();
+      practiceMode = false;
       currentStudyList = db.filter(item => item.type === type && item.nextReview <= today);
       
       if (currentStudyList.length === 0) {
@@ -214,9 +219,24 @@
       renderQuiz();
     }
 
+    function startPractice(type) {
+      practiceMode = true;
+      currentStudyList = db.filter(item => item.type === type);
+
+      if (currentStudyList.length === 0) {
+        alert("연습할 항목이 없습니다! 먼저 데이터를 추가해주세요.");
+        return;
+      }
+
+      currentIndex = 0;
+      openModal('study-modal');
+      renderQuiz();
+    }
+
     function renderQuiz() {
       const item = currentStudyList[currentIndex];
-      document.getElementById('study-title').innerText = `학습 (${currentIndex + 1}/${currentStudyList.length})`;
+      const modeLabel = practiceMode ? "🔁 자유 연습" : "학습";
+      document.getElementById('study-title').innerText = `${modeLabel} (${currentIndex + 1}/${currentStudyList.length})`;
       document.getElementById('quiz-question').innerText = item.q;
       
       const answerEl = document.getElementById('quiz-answer');
@@ -248,20 +268,22 @@
 
     function submitResult(isCorrect) {
       const item = currentStudyList[currentIndex];
-      const dbItem = db.find(e => e.id === item.id);
 
-      if (dbItem) {
-        if (isCorrect) {
-          dbItem.stage = Math.min(dbItem.stage + 1, INTERVALS.length - 1);
-        } else {
-          dbItem.stage = 0; // 틀리면 1단계로 리셋
+      if (!practiceMode) {
+        const dbItem = db.find(e => e.id === item.id);
+        if (dbItem) {
+          if (isCorrect) {
+            dbItem.stage = Math.min(dbItem.stage + 1, INTERVALS.length - 1);
+          } else {
+            dbItem.stage = 0; // 틀리면 1단계로 리셋
+          }
+
+          const nextDays = INTERVALS[dbItem.stage];
+          const nextDate = new Date();
+          nextDate.setDate(nextDate.getDate() + nextDays);
+          dbItem.nextReview = nextDate.toISOString().split('T')[0];
+          saveData();
         }
-
-        const nextDays = INTERVALS[dbItem.stage];
-        const nextDate = new Date();
-        nextDate.setDate(nextDate.getDate() + nextDays);
-        dbItem.nextReview = nextDate.toISOString().split('T')[0];
-        saveData();
       }
 
       if (!isCorrect) {
@@ -273,7 +295,8 @@
       if (currentIndex < currentStudyList.length) {
         renderQuiz();
       } else {
-        alert("오늘의 복습을 모두 마쳤습니다! 수고하셨습니다.");
+        alert(practiceMode ? "자유 연습을 모두 마쳤습니다!" : "오늘의 복습을 모두 마쳤습니다! 수고하셨습니다.");
+        practiceMode = false;
         closeModal('study-modal');
       }
     }
