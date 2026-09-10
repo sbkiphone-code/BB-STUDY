@@ -204,19 +204,10 @@
       }
     }
 
-    function shuffleArray(arr) {
-      const a = [...arr];
-      for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
-      }
-      return a;
-    }
-
     function startStudy(type) {
       const today = getTodayString();
       practiceMode = false;
-      currentStudyList = shuffleArray(db.filter(item => item.type === type && item.nextReview <= today));
+      currentStudyList = db.filter(item => item.type === type && item.nextReview <= today);
       
       if (currentStudyList.length === 0) {
         alert("오늘 복습할 항목이 없습니다!");
@@ -230,7 +221,7 @@
 
     function startPractice(type) {
       practiceMode = true;
-      currentStudyList = shuffleArray(db.filter(item => item.type === type));
+      currentStudyList = db.filter(item => item.type === type);
 
       if (currentStudyList.length === 0) {
         alert("연습할 항목이 없습니다! 먼저 데이터를 추가해주세요.");
@@ -296,4 +287,34 @@
       }
 
       if (!isCorrect) {
-        // 틀린 문제는 이번 세션이 끝나기 전에 다시 만날 수 있도록 목록 맨 뒤
+        // 틀린 문제는 이번 세션이 끝나기 전에 다시 만날 수 있도록 목록 맨 뒤에 재등록
+        currentStudyList.push(item);
+      }
+
+      currentIndex++;
+      if (currentIndex < currentStudyList.length) {
+        renderQuiz();
+      } else {
+        alert(practiceMode ? "자유 연습을 모두 마쳤습니다!" : "오늘의 복습을 모두 마쳤습니다! 수고하셨습니다.");
+        practiceMode = false;
+        closeModal('study-modal');
+      }
+    }
+
+    function exportData() {
+      navigator.clipboard.writeText(JSON.stringify(db));
+      alert("전체 데이터가 클립보드에 복사되었습니다. 안전하게 백업하세요.");
+    }
+
+    function clearAllData() {
+      if (confirm("정말 모든 데이터를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) {
+        db = [];
+        saveData();
+      }
+    }
+
+    // 초기화
+    updateDashboard();
+  </script>
+</body>
+</html>
