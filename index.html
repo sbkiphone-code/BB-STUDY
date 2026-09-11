@@ -272,7 +272,7 @@
       optionsEl.innerHTML = '';
 
       if (item.options && Array.isArray(item.options)) {
-        item.options.forEach(opt => {
+        shuffleArray(item.options).forEach(opt => {
           const btn = document.createElement('button');
           btn.className = 'quiz-opt-btn';
           btn.innerText = opt;
