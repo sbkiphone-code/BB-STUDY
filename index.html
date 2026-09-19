@@ -63,7 +63,7 @@
     </div>
     <div class="btn-group">
       <button onclick="startStudy('vocab')">오늘의 복습 시작하기</button>
-      <button class="secondary" onclick="startPractice('vocab')">🔁 자유 연습 (스케줄 영향 없음)</button>
+      <button class="secondary" onclick="startPractice('vocab')">🆕 오늘 새 내용 먼저 보기</button>
     </div>
   </div>
 
@@ -76,7 +76,7 @@
     </div>
     <div class="btn-group">
       <button onclick="startStudy('hanja')">오늘의 복습 시작하기</button>
-      <button class="secondary" onclick="startPractice('hanja')">🔁 자유 연습 (스케줄 영향 없음)</button>
+      <button class="secondary" onclick="startPractice('hanja')">🆕 오늘 새 내용 먼저 보기</button>
     </div>
   </div>
 
@@ -89,7 +89,7 @@
     </div>
     <div class="btn-group">
       <button onclick="startStudy('grammar')">오늘의 복습 시작하기</button>
-      <button class="secondary" onclick="startPractice('grammar')">🔁 자유 연습 (스케줄 영향 없음)</button>
+      <button class="secondary" onclick="startPractice('grammar')">🆕 오늘 새 내용 먼저 보기</button>
     </div>
   </div>
 
@@ -160,15 +160,6 @@
     let currentStudyList = [];
     let currentIndex = 0;
     let practiceMode = false; // true면 스케줄(stage/nextReview)에 영향 안 줌
-    let todayPool = JSON.parse(localStorage.getItem('today_pool')) || { date: '', ids: [] };
-
-    function ensureTodayPool() {
-      const today = getTodayString();
-      if (todayPool.date !== today) {
-        todayPool = { date: today, ids: db.filter(item => item.nextReview <= today).map(item => item.id) };
-        localStorage.setItem('today_pool', JSON.stringify(todayPool));
-      }
-    }
 
     function saveData() {
       localStorage.setItem('forgetting_curve_data', JSON.stringify(db));
@@ -216,17 +207,13 @@
               a: item.a,
               options: item.options || null, // 객관식용 옵션 배열 (선택)
               stage: 0,
-              nextReview: today
+              nextReview: today,
+              addedDate: today // 오늘 새로 추가된 항목인지 구분용 (자유 연습 대상 판별)
             };
             db.push(newItem);
-            if (todayPool.date === today) {
-              todayPool.ids.push(newItem.id);
-            }
             addedCount++;
           }
         });
-
-        localStorage.setItem('today_pool', JSON.stringify(todayPool));
 
         saveData();
         alert(`${addedCount}개의 항목이 성공적으로 추가되었습니다!`);
@@ -249,7 +236,8 @@
     function startStudy(type) {
       const today = getTodayString();
       practiceMode = false;
-      currentStudyList = shuffleArray(db.filter(item => item.type === type && item.nextReview <= today));
+      // 오늘 새로 추가된(아직 첫 학습 안 한) 항목은 제외 - 그건 "자유 연습"에서 먼저 학습
+      currentStudyList = shuffleArray(db.filter(item => item.type === type && item.nextReview <= today && item.addedDate !== today));
       
       if (currentStudyList.length === 0) {
         alert("오늘 복습할 항목이 없습니다!");
@@ -262,12 +250,13 @@
     }
 
     function startPractice(type) {
-      ensureTodayPool();
+      const today = getTodayString();
       practiceMode = true;
-      currentStudyList = shuffleArray(db.filter(item => item.type === type && todayPool.ids.includes(item.id)));
+      // 오늘 새로 추가된 항목만 대상 (스케줄과 무관하게 첫 학습용)
+      currentStudyList = shuffleArray(db.filter(item => item.type === type && item.addedDate === today));
 
       if (currentStudyList.length === 0) {
-        alert("오늘 연습할 항목이 없습니다!");
+        alert("오늘 새로 추가된 항목이 없습니다! 데이터를 먼저 붙여넣어주세요.");
         return;
       }
 
@@ -357,7 +346,6 @@
     }
 
     // 초기화
-    ensureTodayPool();
     updateDashboard();
   </script>
 </body>
