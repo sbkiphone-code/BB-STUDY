@@ -100,4 +100,301 @@
   <!-- 데이터 관리 -->
   <div class="section-card">
     <div class="btn-group">
-      <button class="secondary" onclick="openModal('add-modal')">+ 매일 데이터 붙여넣기 (JSON)
+      <button class="secondary" onclick="openModal('add-modal')">+ 매일 데이터 붙여넣기 (JSON)</button>
+      <button class="secondary" onclick="exportData()">💾 데이터 백업 (복사)</button>
+      <button class="danger" onclick="clearAllData()">🗑️ 전체 데이터 초기화</button>
+    </div>
+  </div>
+
+  <!-- 데이터 추가 모달 -->
+  <div id="add-modal" class="modal">
+    <div class="modal-content">
+      <h3>매일 소스 붙여넣기</h3>
+      <p style="font-size: 12px; color: var(--text-sub); margin-top:4px;">AI가 생성해준 JSON 데이터를 아래에 붙여넣으세요. (단어/한자/문법 형식 자동 인식)</p>
+      <textarea id="json-input" placeholder='[{"word":"resilient","meaning":"회복력 있는"}, ...]'></textarea>
+      <div class="btn-group" style="margin-top: 12px;">
+        <button onclick="importJSON()">데이터 추가하기</button>
+        <button class="secondary" onclick="closeModal('add-modal')">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 학습 모달 -->
+  <div id="study-modal" class="modal">
+    <div class="modal-content">
+      <h3 id="study-title" style="margin-bottom: 12px;">학습 진행</h3>
+      <div class="quiz-card">
+        <div class="quiz-q" id="quiz-question">문제</div>
+        <div class="quiz-a" id="quiz-answer">정답 내용</div>
+        <div class="quiz-options" id="quiz-options"></div>
+      </div>
+      <div class="btn-group" id="study-controls">
+        <button id="show-answer-btn" onclick="showAnswer()">정답 확인</button>
+        <div id="result-btns" style="display:none; gap:8px;">
+          <button style="background:var(--danger); flex:1;" onclick="submitResult(false)">❌ 틀림 (다시 도전)</button>
+          <button style="background:var(--success); flex:1;" onclick="submitResult(true)">⭕ 맞음 (다음 단계)</button>
+        </div>
+      </div>
+      <button class="secondary" style="margin-top: 10px; width: 100%;" onclick="closeModal('study-modal')">학습 종료</button>
+    </div>
+  </div>
+
+  <script>
+    // 망각곡선 단계별 주기 (일 수): 1일 -> 3일 -> 7일 -> 14일 -> 30일 -> 완료(999일)
+    const INTERVALS = [1, 3, 7, 14, 30, 999];
+    const VALID_TYPES = ['vocab', 'hanja', 'grammar'];
+
+    let db = JSON.parse(localStorage.getItem('forgetting_curve_data')) || [];
+
+    // ID 충돌 자동 복구: 예전 버그로 같은 id를 가진 항목이 있으면 새 고유 id로 재배정
+    (function repairDuplicateIds() {
+      const seen = new Set();
+      let fixedCount = 0;
+      db.forEach((item, idx) => {
+        if (seen.has(item.id)) {
+          item.id = Date.now().toString(36) + '-' + idx + '-' + Math.random().toString(36).slice(2, 10);
+          fixedCount++;
+        }
+        seen.add(item.id);
+      });
+      if (fixedCount > 0) {
+        localStorage.setItem('forgetting_curve_data', JSON.stringify(db));
+      }
+    })();
+
+    // 유령 데이터 자동 정리: type이 유효하지 않거나(undefined 포함) q가 비어있는 항목 제거
+    // (과거 스키마 불일치로 저장은 됐지만 대시보드/복습에 전혀 안 잡히던 항목들)
+    // 한 번만 실행되도록 플래그로 관리
+    (function cleanupGhostData() {
+      if (localStorage.getItem('ghost_cleanup_v1_done')) return;
+
+      const before = db.length;
+      db = db.filter(item => VALID_TYPES.includes(item.type) && item.q && item.q.trim() !== '');
+      const removedCount = before - db.length;
+
+      if (removedCount > 0) {
+        localStorage.setItem('forgetting_curve_data', JSON.stringify(db));
+        window.addEventListener('DOMContentLoaded', () => {
+          const banner = document.getElementById('cleanup-banner');
+          if (banner) {
+            banner.innerHTML = `<div class="notice-banner">🧹 이전 스키마 오류로 저장됐던 유령 데이터 ${removedCount}개를 정리했습니다. (type/질문 내용이 비어있던 항목)</div>`;
+          }
+        });
+      }
+      localStorage.setItem('ghost_cleanup_v1_done', '1');
+    })();
+
+    let currentStudyList = [];
+    let currentIndex = 0;
+    let practiceMode = false; // true면 스케줄(stage/nextReview)에 영향 안 줌
+
+    function saveData() {
+      localStorage.setItem('forgetting_curve_data', JSON.stringify(db));
+      updateDashboard();
+    }
+
+    function getTodayString() {
+      return new Date().toISOString().split('T')[0];
+    }
+
+    function updateDashboard() {
+      const today = getTodayString();
+      ['vocab', 'hanja', 'grammar'].forEach(type => {
+        const items = db.filter(item => item.type === type);
+        const dueItems = items.filter(item => item.nextReview <= today);
+        document.getElementById(`${type}-total`).innerText = items.length;
+        document.getElementById(`${type}-today`).innerText = dueItems.length;
+      });
+    }
+
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; updateDashboard(); }
+
+    // 여러 소스 스키마를 앱 내부 표준(type/q/a/options)으로 정규화
+    function normalizeImportItem(item) {
+      if (item.type && VALID_TYPES.includes(item.type) && item.q && item.a) {
+        return { type: item.type, q: item.q, a: item.a, options: item.options || null };
+      }
+      if (item.word) {
+        const a = item.example ? `${item.meaning}\n예) ${item.example}` : item.meaning;
+        return { type: 'vocab', q: item.word, a: a, options: null };
+      }
+      if (item.char) {
+        const a = item.example ? `${item.meaning}\n예) ${item.example}` : item.meaning;
+        return { type: 'hanja', q: item.char, a: a, options: null };
+      }
+      if (item.q && item.answer) {
+        const a = item.note ? `${item.answer}\n(${item.note})` : item.answer;
+        return { type: 'grammar', q: item.q, a: a, options: item.options || null };
+      }
+      return null;
+    }
+
+    function importJSON() {
+      let input = document.getElementById('json-input').value;
+      input = input.trim()
+        .replace(/[\u201C\u201D\u2033]/g, '"')
+        .replace(/[\u2018\u2019]/g, "'")
+        .replace(/^```(json)?/i, '')
+        .replace(/```$/, '')
+        .trim();
+      try {
+        const data = JSON.parse(input);
+        const today = getTodayString();
+        let addedCount = 0;
+        let skippedCount = 0;
+        let idxCounter = 0;
+
+        data.forEach(rawItem => {
+          const item = normalizeImportItem(rawItem);
+          if (!item) { skippedCount++; return; }
+
+          if (!db.some(e => e.type === item.type && e.q === item.q)) {
+            const newItem = {
+              id: Date.now().toString(36) + '-' + idxCounter++ + '-' + Math.random().toString(36).slice(2, 10),
+              type: item.type,
+              q: item.q,
+              a: item.a,
+              options: item.options,
+              stage: 0,
+              nextReview: today,
+              addedDate: today
+            };
+            db.push(newItem);
+            addedCount++;
+          }
+        });
+
+        saveData();
+        let msg = `${addedCount}개의 항목이 성공적으로 추가되었습니다!`;
+        if (skippedCount > 0) msg += `\n(인식 불가 형식 ${skippedCount}개는 건너뜀)`;
+        alert(msg);
+        document.getElementById('json-input').value = '';
+        closeModal('add-modal');
+      } catch (e) {
+        alert("JSON 오류: " + e.message + "\n\n입력된 글자 수: " + input.length);
+      }
+    }
+
+    function shuffleArray(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function startStudy(type) {
+      const today = getTodayString();
+      practiceMode = false;
+      currentStudyList = shuffleArray(db.filter(item => item.type === type && item.nextReview <= today && item.addedDate !== today));
+      
+      if (currentStudyList.length === 0) {
+        alert("오늘 복습할 항목이 없습니다!");
+        return;
+      }
+
+      currentIndex = 0;
+      openModal('study-modal');
+      renderQuiz();
+    }
+
+    function startPractice(type) {
+      const today = getTodayString();
+      practiceMode = true;
+      currentStudyList = shuffleArray(db.filter(item => item.type === type && item.addedDate === today));
+
+      if (currentStudyList.length === 0) {
+        alert("오늘 새로 추가된 항목이 없습니다! 데이터를 먼저 붙여넣어주세요.");
+        return;
+      }
+
+      currentIndex = 0;
+      openModal('study-modal');
+      renderQuiz();
+    }
+
+    function renderQuiz() {
+      const item = currentStudyList[currentIndex];
+      const modeLabel = practiceMode ? "🔁 자유 연습" : "학습";
+      document.getElementById('study-title').innerText = `${modeLabel} (${currentIndex + 1}/${currentStudyList.length})`;
+      document.getElementById('quiz-question').innerText = item.q;
+      
+      const answerEl = document.getElementById('quiz-answer');
+      answerEl.innerText = item.a;
+      answerEl.style.display = 'none';
+
+      const optionsEl = document.getElementById('quiz-options');
+      optionsEl.innerHTML = '';
+
+      if (item.options && Array.isArray(item.options)) {
+        shuffleArray(item.options).forEach(opt => {
+          const btn = document.createElement('button');
+          btn.className = 'quiz-opt-btn';
+          btn.innerText = opt;
+          btn.onclick = () => showAnswer();
+          optionsEl.appendChild(btn);
+        });
+      }
+
+      document.getElementById('show-answer-btn').style.display = 'block';
+      document.getElementById('result-btns').style.display = 'none';
+    }
+
+    function showAnswer() {
+      document.getElementById('quiz-answer').style.display = 'block';
+      document.getElementById('show-answer-btn').style.display = 'none';
+      document.getElementById('result-btns').style.display = 'flex';
+    }
+
+    function submitResult(isCorrect) {
+      const item = currentStudyList[currentIndex];
+
+      if (!practiceMode) {
+        const dbItem = db.find(e => e.id === item.id);
+        if (dbItem) {
+          if (isCorrect) {
+            dbItem.stage = Math.min(dbItem.stage + 1, INTERVALS.length - 1);
+          } else {
+            dbItem.stage = 0;
+          }
+
+          const nextDays = INTERVALS[dbItem.stage];
+          const nextDate = new Date();
+          nextDate.setDate(nextDate.getDate() + nextDays);
+          dbItem.nextReview = nextDate.toISOString().split('T')[0];
+          saveData();
+        }
+      }
+
+      if (!isCorrect) {
+        currentStudyList.push(item);
+      }
+
+      currentIndex++;
+      if (currentIndex < currentStudyList.length) {
+        renderQuiz();
+      } else {
+        alert(practiceMode ? "자유 연습을 모두 마쳤습니다!" : "오늘의 복습을 모두 마쳤습니다! 수고하셨습니다.");
+        practiceMode = false;
+        closeModal('study-modal');
+      }
+    }
+
+    function exportData() {
+      navigator.clipboard.writeText(JSON.stringify(db));
+      alert("전체 데이터가 클립보드에 복사되었습니다. 안전하게 백업하세요.");
+    }
+
+    function clearAllData() {
+      if (confirm("정말 모든 데이터를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) {
+        db = [];
+        saveData();
+      }
+    }
+
+    updateDashboard();
+  </script>
+</body>
+</html>
