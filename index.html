@@ -140,6 +140,23 @@
     const INTERVALS = [1, 3, 7, 14, 30, 999];
 
     let db = JSON.parse(localStorage.getItem('forgetting_curve_data')) || [];
+
+    // ID 충돌 자동 복구: 예전 버그로 같은 id를 가진 항목이 있으면 새 고유 id로 재배정
+    (function repairDuplicateIds() {
+      const seen = new Set();
+      let fixedCount = 0;
+      db.forEach((item, idx) => {
+        if (seen.has(item.id)) {
+          item.id = Date.now().toString(36) + '-' + idx + '-' + Math.random().toString(36).slice(2, 10);
+          fixedCount++;
+        }
+        seen.add(item.id);
+      });
+      if (fixedCount > 0) {
+        localStorage.setItem('forgetting_curve_data', JSON.stringify(db));
+      }
+    })();
+
     let currentStudyList = [];
     let currentIndex = 0;
     let practiceMode = false; // true면 스케줄(stage/nextReview)에 영향 안 줌
@@ -187,12 +204,13 @@
         const data = JSON.parse(input);
         const today = getTodayString();
         let addedCount = 0;
+        let idxCounter = 0;
 
         data.forEach(item => {
           // 중복 방지 (질문 내용 기준)
           if (!db.some(e => e.q === item.q)) {
             const newItem = {
-              id: Date.now() + Math.random(),
+              id: Date.now().toString(36) + '-' + idxCounter++ + '-' + Math.random().toString(36).slice(2, 10),
               type: item.type, // 'vocab', 'hanja', 'grammar'
               q: item.q,
               a: item.a,
