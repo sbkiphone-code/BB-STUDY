@@ -201,7 +201,9 @@
       const today = getTodayString();
       ['vocab', 'hanja', 'grammar'].forEach(type => {
         const items = db.filter(item => item.type === type);
-        const dueItems = items.filter(item => item.nextReview <= today);
+        // "오늘 복습" 숫자는 실제로 startStudy()가 학습시킬 항목 수와 일치시킴
+        // (오늘 새로 추가된 항목은 "복습 시작"이 아닌 "자유 연습" 대상이므로 여기서 제외)
+        const dueItems = items.filter(item => item.nextReview <= today && item.addedDate !== today);
         document.getElementById(`${type}-total`).innerText = items.length;
         document.getElementById(`${type}-today`).innerText = dueItems.length;
       });
@@ -211,22 +213,36 @@
     function closeModal(id) { document.getElementById(id).style.display = 'none'; updateDashboard(); }
 
     // 여러 소스 스키마를 앱 내부 표준(type/q/a/options)으로 정규화
+    // 지원 스키마:
+    //  - 표준형: {type, q, a, options?}
+    //  - 단어형: {word, meaning, example?}
+    //  - 한자형: {char, meaning, example?}
+    //  - 문법형: {q, options, answer, note?}
     function normalizeImportItem(item) {
+      // 이미 표준 스키마 (type + q + a)
       if (item.type && VALID_TYPES.includes(item.type) && item.q && item.a) {
         return { type: item.type, q: item.q, a: item.a, options: item.options || null };
       }
+
+      // 단어형: word/meaning/example
       if (item.word) {
         const a = item.example ? `${item.meaning}\n예) ${item.example}` : item.meaning;
         return { type: 'vocab', q: item.word, a: a, options: null };
       }
+
+      // 한자형: char/meaning/example
       if (item.char) {
         const a = item.example ? `${item.meaning}\n예) ${item.example}` : item.meaning;
         return { type: 'hanja', q: item.char, a: a, options: null };
       }
+
+      // 문법형: q/options/answer/note
       if (item.q && item.answer) {
         const a = item.note ? `${item.answer}\n(${item.note})` : item.answer;
         return { type: 'grammar', q: item.q, a: a, options: item.options || null };
       }
+
+      // 인식 불가
       return null;
     }
 
@@ -249,6 +265,7 @@
           const item = normalizeImportItem(rawItem);
           if (!item) { skippedCount++; return; }
 
+          // 중복 방지 (type + 질문 내용 기준 — 다른 타입끼리는 q가 같아도 별개로 취급)
           if (!db.some(e => e.type === item.type && e.q === item.q)) {
             const newItem = {
               id: Date.now().toString(36) + '-' + idxCounter++ + '-' + Math.random().toString(36).slice(2, 10),
@@ -258,7 +275,7 @@
               options: item.options,
               stage: 0,
               nextReview: today,
-              addedDate: today
+              addedDate: today // 오늘 새로 추가된 항목인지 구분용 (자유 연습 대상 판별)
             };
             db.push(newItem);
             addedCount++;
@@ -288,6 +305,7 @@
     function startStudy(type) {
       const today = getTodayString();
       practiceMode = false;
+      // 오늘 새로 추가된(아직 첫 학습 안 한) 항목은 제외 - 그건 "자유 연습"에서 먼저 학습
       currentStudyList = shuffleArray(db.filter(item => item.type === type && item.nextReview <= today && item.addedDate !== today));
       
       if (currentStudyList.length === 0) {
@@ -303,6 +321,7 @@
     function startPractice(type) {
       const today = getTodayString();
       practiceMode = true;
+      // 오늘 새로 추가된 항목만 대상 (스케줄과 무관하게 첫 학습용)
       currentStudyList = shuffleArray(db.filter(item => item.type === type && item.addedDate === today));
 
       if (currentStudyList.length === 0) {
@@ -357,7 +376,7 @@
           if (isCorrect) {
             dbItem.stage = Math.min(dbItem.stage + 1, INTERVALS.length - 1);
           } else {
-            dbItem.stage = 0;
+            dbItem.stage = 0; // 틀리면 1단계로 리셋
           }
 
           const nextDays = INTERVALS[dbItem.stage];
@@ -369,6 +388,7 @@
       }
 
       if (!isCorrect) {
+        // 틀린 문제는 이번 세션이 끝나기 전에 다시 만날 수 있도록 목록 맨 뒤에 재등록
         currentStudyList.push(item);
       }
 
@@ -394,6 +414,7 @@
       }
     }
 
+    // 초기화
     updateDashboard();
   </script>
 </body>
