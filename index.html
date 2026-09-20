@@ -193,8 +193,16 @@
       updateDashboard();
     }
 
+    // 로컬(기기) 시간 기준 날짜 문자열 반환 (UTC 기준이면 자정~오전9시 사이 한국 날짜가
+    // 하루 밀리는 버그가 생기므로, 타임존 오프셋을 보정해서 로컬 날짜를 정확히 계산함)
+    function toDateString(date) {
+      const offset = date.getTimezoneOffset(); // 분 단위, 한국은 -540
+      const local = new Date(date.getTime() - offset * 60000);
+      return local.toISOString().split('T')[0];
+    }
+
     function getTodayString() {
-      return new Date().toISOString().split('T')[0];
+      return toDateString(new Date());
     }
 
     function updateDashboard() {
@@ -382,7 +390,7 @@
           const nextDays = INTERVALS[dbItem.stage];
           const nextDate = new Date();
           nextDate.setDate(nextDate.getDate() + nextDays);
-          dbItem.nextReview = nextDate.toISOString().split('T')[0];
+          dbItem.nextReview = toDateString(nextDate);
           saveData();
         }
       }
