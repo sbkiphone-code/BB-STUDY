@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>5대 핵심동사 카드 학습</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --subtext: #475569;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      max-width: 500px;
+      width: 100%;
+    }
+    h1 {
+      text-align: center;
+      font-size: 1.4rem;
+      color: var(--primary);
+      margin-bottom: 20px;
+    }
+    /* 카드 스타일 */
+    .card-container {
+      perspective: 1000px;
+      margin-bottom: 20px;
+    }
+    .card {
+      width: 100%;
+      min-height: 220px;
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      padding: 24px;
+      box-sizing: border-box;
+      cursor: pointer;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    .card.flipped {
+      transform: rotateY(180deg);
+    }
+    .card-front, .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      padding: 24px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .card-back {
+      transform: rotateY(180deg);
+    }
+    .badge {
+      background: #eff6ff;
+      color: var(--primary);
+      font-weight: bold;
+      font-size: 0.85rem;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+    }
+    .kr-text {
+      font-size: 1.25rem;
+      font-weight: 700;
+      word-break: keep-all;
+    }
+    .en-text {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--primary);
+      word-break: keep-all;
+      margin-bottom: 8px;
+    }
+    .hint {
+      font-size: 0.9rem;
+      color: var(--subtext);
+      background: #f1f5f9;
+      padding: 6px 12px;
+      border-radius: 8px;
+      margin-top: 8px;
+    }
+    .click-guide {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-top: 15px;
+    }
+
+    /* 추가 예문 영역 */
+    .extra-section {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+      margin-bottom: 20px;
+    }
+    .extra-title {
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: var(--subtext);
+      margin-bottom: 12px;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 6px;
+    }
+    .extra-item {
+      margin-bottom: 12px;
+      text-align: left;
+    }
+    .extra-item:last-child {
+      margin-bottom: 0;
+    }
+    .extra-kr {
+      font-size: 0.9rem;
+      color: #334155;
+    }
+    .extra-en {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    /* 네비게이션 버튼 */
+    .controls {
+      display: flex;
+      gap: 12px;
+    }
+    button {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: var(--primary);
+      color: white;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+    }
+    button:active {
+      opacity: 0.9;
+    }
+    button.secondary {
+      background: #e2e8f0;
+      color: #334155;
+      box-shadow: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>5대 핵심동사 회화 카드</h1>
+
+  <!-- 플래시 카드 -->
+  <div class="card-container">
+    <div class="card" id="card" onclick="flipCard()">
+      <div class="card-front">
+        <span class="badge" id="verb-badge">take</span>
+        <div class="kr-text" id="kr-text">한국어 문장</div>
+        <div class="click-guide">💡 터치해서 영어 정답 확인</div>
+      </div>
+      <div class="card-back">
+        <div class="en-text" id="en-text">English Sentence</div>
+        <div class="hint" id="hint-text">패턴 힌트</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 추가 변형 예문 -->
+  <div class="extra-section">
+    <div class="extra-title">✨ 추가 응용 예문</div>
+    <div id="extra-list"></div>
+  </div>
+
+  <!-- 컨트롤 버튼 -->
+  <div class="controls">
+    <button class="secondary" onclick="prevCard()">이전</button>
+    <button onclick="nextCard()">다음 카드</button>
+  </div>
+</div>
+
+<script>
+  // PDF 자료 및 추가 확장 예문 데이터
+  const studyData = [
+    {
+      verb: "TAKE",
+      kr: "나를 공항까지 데려다줄 수 있어?",
+      en: "Can you take me to the airport?",
+      hint: "take + 사람 + 장소 (~를 어디로 데려다주다)",
+      extras: [
+        { kr: "내가 너 집까지 바래다줄게.", en: "I'll take you home." },
+        { kr: "이 버스를 타면 시청으로 가나요?", en: "Does this bus take me to City Hall?" }
+      ]
+    },
+    {
+      verb: "TAKE",
+      kr: "이 약을 하루에 세 번 드세요.",
+      en: "Take this medicine three times a day.",
+      hint: "take + 약/음식 (약이나 음료를 복용하다)",
+      extras: [
+        { kr: "비타민 챙겨 먹는 거 잊지 마.", en: "Don't forget to take your vitamins." },
+        { kr: "심호흡하고 좀 쉬어.", en: "Take a deep breath and take a break." }
+      ]
+    },
+    {
+      verb: "MAKE",
+      kr: "내가 오늘 밤 저녁 저녁 식사를 준비할게.",
+      en: "I'll make dinner tonight.",
+      hint: "make + 음식/음료 (음식이나 음료를 만들다)",
+      extras: [
+        { kr: "커피 한 잔 타 줄까?", en: "Can I make you a cup of coffee?" },
+        { kr: "그가 우리를 위해 예약을 해줬어.", en: "He made a reservation for us." }
+      ]
+    },
+    {
+      verb: "HAVE",
+      kr: "오늘 밤에 질문이 몇 개 있어요.",
+      en: "I have a few questions tonight.",
+      hint: "have + 명사 (소유하다/가지고 있다)",
+      extras: [
+        { kr: "좋은 하루 보내세요!", en: "Have a good day!" },
+        { kr: "잠시 이야기 좀 할 수 있을까요?", en: "Do you have a minute to talk?" }
+      ]
+    },
+    {
+      verb: "GET",
+      kr: "나 방금 너 메시지 받았어.",
+      en: "I just got your message.",
+      hint: "get + 명사 (받다/얻다)",
+      extras: [
+        { kr: "어제 새 전화기 샀어.", en: "I got a new phone yesterday." },
+        { kr: "이해했어! (알아들었어)", en: "I get it!" }
+      ]
+    },
+    {
+      verb: "DO",
+      kr: "너 오늘 오후에 뭐 할 거야?",
+      en: "What are you going to do this afternoon?",
+      hint: "do + 행동 (행동이나 활동을 하다)",
+      extras: [
+        { kr: "최선을 다해봐!", en: "Just do your best!" },
+        { kr: "나 주말마다 집안일을 해.", en: "I do the housework on weekends." }
+      ]
+    }
+  ];
+
+  let currentIndex = 0;
+  const card = document.getElementById('card');
+
+  function renderCard() {
+    const data = studyData[currentIndex];
+    
+    // 카드 뒤집혀 있으면 원상복구
+    card.classList.remove('flipped');
+
+    setTimeout(() => {
+      document.getElementById('verb-badge').innerText = data.verb;
+      document.getElementById('kr-text').innerText = data.kr;
+      document.getElementById('en-text').innerText = data.en;
+      document.getElementById('hint-text').innerText = data.hint;
+
+      // 추가 예문 출력
+      const extraList = document.getElementById('extra-list');
+      extraList.innerHTML = data.extras.map(item => `
+        <div class="extra-item">
+          <div class="extra-kr">• ${item.kr}</div>
+          <div class="extra-en">&nbsp;&nbsp;${item.en}</div>
+        </div>
+      `).join('');
+    }, 150);
+  }
+
+  function flipCard() {
+    card.classList.toggle('flipped');
+  }
+
+  function nextCard() {
+    currentIndex = (currentIndex + 1) % studyData.length;
+    renderCard();
+  }
+
+  function prevCard() {
+    currentIndex = (currentIndex - 1 + studyData.length) % studyData.length;
+    renderCard();
+  }
+
+  // 초기 로드
+  renderCard();
+</script>
+
+</body>
+</html>
