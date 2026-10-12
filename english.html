@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>5대 동사 회화 망각곡선 학습</title>
+    <title>5대 동사 회화 트레이닝</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #f4f4f9;
+            background-color: #0f172a;
+            color: #f8fafc;
             margin: 0;
             padding: 20px;
             display: flex;
@@ -17,92 +18,66 @@
         .container {
             width: 100%;
             max-width: 500px;
-            background: white;
-            padding: 24px;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             box-sizing: border-box;
         }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
+        h1 {
+            font-size: 1.4rem;
+            text-align: center;
+            margin-bottom: 6px;
+            color: #f8fafc;
         }
-        h2 {
-            font-size: 1.2rem;
-            color: #333;
-            margin: 0;
-        }
-        .status-badge {
+        .subtitle {
             font-size: 0.85rem;
-            background: #e0f2fe;
-            color: #0369a1;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-weight: 600;
+            text-align: center;
+            color: #94a3b8;
+            margin-bottom: 24px;
         }
-        .filter-box {
+        .card-box {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 14px;
+            color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
             margin-bottom: 16px;
         }
-        select {
-            width: 100%;
-            padding: 10px;
-            font-size: 0.95rem;
-            border-radius: 8px;
-            border: 1px solid #cbd5e1;
-            background-color: #fff;
-            color: #334155;
-        }
-        .card {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
+        .stat-card {
+            background: #0f172a;
+            border: 1px solid #334155;
             border-radius: 12px;
-            padding: 20px;
-            min-height: 140px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            margin-bottom: 20px;
-            position: relative;
+            padding: 16px;
+            text-align: center;
         }
-        .question {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 12px;
-            line-height: 1.4;
-        }
-        .answer-container {
-            display: none;
-            margin-top: 10px;
-        }
-        .answer {
-            font-size: 1.05rem;
-            color: #2563eb;
-            font-weight: 600;
-            line-height: 1.4;
-            margin-bottom: 8px;
-        }
-        .btn-tts {
-            background: #eff6ff;
-            color: #2563eb;
-            border: 1px solid #bfdbfe;
-            padding: 6px 12px;
-            border-radius: 20px;
+        .stat-label {
             font-size: 0.85rem;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            font-weight: 500;
+            color: #94a3b8;
+            margin-bottom: 6px;
         }
-        .btn-group {
-            display: flex;
-            gap: 10px;
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
         }
-        button.action-btn {
-            flex: 1;
+        .stat-value.total { color: #38bdf8; }
+        .stat-value.review { color: #f87171; }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+            width: 100%;
             padding: 14px;
             font-size: 1rem;
             font-weight: 600;
@@ -111,90 +86,236 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-        .btn-show {
-            background: #4f46e5;
-            color: white;
-            width: 100%;
+        .btn-primary:active { background: #1d4ed8; }
+
+        .progress-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #0f172a;
+            border: 1px solid #334155;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 10px;
         }
-        .btn-show:active { background: #4338ca; }
+        .progress-item span {
+            font-size: 0.9rem;
+            color: #e2e8f0;
+        }
+        .btn-add {
+            background: #334155;
+            color: #f8fafc;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-add:active { background: #475569; }
+
+        .btn-secondary {
+            background: #334155;
+            color: #e2e8f0;
+            width: 100%;
+            padding: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            width: 100%;
+            padding: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        /* 학습 진행 화면 모달 스타일 */
+        #studyModal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .study-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 24px;
+            width: 100%;
+            max-width: 450px;
+            box-sizing: border-box;
+        }
+        .study-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+        .study-q {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #f8fafc;
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+        .study-a-box {
+            display: none;
+            background: #0f172a;
+            border: 1px solid #334155;
+            padding: 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .study-a {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #38bdf8;
+            margin-bottom: 10px;
+        }
+        .btn-tts {
+            background: #1e293b;
+            color: #38bdf8;
+            border: 1px solid #334155;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+        .action-group {
+            display: flex;
+            gap: 10px;
+        }
         .btn-forgot {
-            background: #fee2e2;
-            color: #dc2626;
+            flex: 1;
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            padding: 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
             display: none;
         }
         .btn-remember {
-            background: #dcfce7;
-            color: #16a34a;
+            flex: 1;
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            padding: 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
             display: none;
-        }
-        .complete-msg {
-            text-align: center;
-            color: #64748b;
-            font-size: 1.1rem;
-            padding: 40px 0;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header">
-        <h2>5대 동사 회화 학습</h2>
-        <span id="queueCount" class="status-badge">남은 0개</span>
-    </div>
+    <h1>5대 동사 회화 트레이닝</h1>
+    <div class="subtitle">버튼만 누르면 단계별 진도가 앱에 자동 추가됩니다</div>
 
-    <!-- 동사 필터 (진도 선택) -->
-    <div class="filter-box">
-        <select id="verbFilter" onchange="loadCard()">
-            <option value="ALL">전체 (오늘 복습할 문장)</option>
-            <option value="Take">Take 동사</option>
-            <option value="Have">Have 동사</option>
-        </select>
-    </div>
-
-    <div id="studyArea">
-        <div class="card">
-            <div id="questionText" class="question">데이터를 불러오는 중...</div>
-            
-            <div id="answerContainer" class="answer-container">
-                <div id="answerText" class="answer"></div>
-                <button class="btn-tts" onclick="speakAnswer()">🔊 발음 다시 듣기</button>
+    <!-- 대시보드 메인 카드 -->
+    <div class="card-box">
+        <div class="section-title">💬 회화 영작 학습</div>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">전체 문장</div>
+                <div id="totalCount" class="stat-value total">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">오늘 복습</div>
+                <div id="reviewCount" class="stat-value review">0</div>
             </div>
         </div>
+        <button class="btn-primary" onclick="startReview()">오늘의 회화 복습 시작하기</button>
+    </div>
 
-        <div class="btn-group">
-            <button id="showBtn" class="action-btn btn-show" onclick="revealAnswer()">정답 보기</button>
-            <button id="forgotBtn" class="action-btn btn-forgot" onclick="handleResult(false)">몰랐어요 (재도전)</button>
-            <button id="rememberBtn" class="action-btn btn-remember" onclick="handleResult(true)">알아요 (통과)</button>
+    <!-- 진도별 문제 추가하기 카드 -->
+    <div class="card-box">
+        <div class="section-title">📚 진도별 문제 추가하기</div>
+        
+        <div class="progress-item">
+            <span>Take (1) ~ (2) 학습 추가</span>
+            <button class="btn-add" onclick="addBatch('take1')">+ 추가</button>
+        </div>
+        <div class="progress-item">
+            <span>Take (3) ~ (4) 학습 추가</span>
+            <button class="btn-add" onclick="addBatch('take2')">+ 추가</button>
+        </div>
+        <div class="progress-item">
+            <span>Have (1) ~ (2) 학습 추가</span>
+            <button class="btn-add" onclick="addBatch('have1')">+ 추가</button>
         </div>
     </div>
 
-    <div id="completeArea" class="complete-msg" style="display: none;">
-        🎉 선택한 코스의 복습을 모두 완료했습니다!<br>
-        <small style="color: #94a3b8; font-size: 0.9rem;">다른 동사 코스를 선택하거나 내일 다시 도전해 보세요.</small>
+    <!-- 백업 및 초기화 -->
+    <button class="btn-secondary" onclick="backupData()">데이터 백업 (복사)</button>
+    <button class="btn-danger" onclick="resetData()">전체 데이터 초기화</button>
+</div>
+
+<!-- 학습/복습 진행 모달 화면 -->
+<div id="studyModal">
+    <div class="study-card">
+        <div class="study-header">
+            <span id="studyProgress">1 / 5</span>
+            <span style="cursor: pointer;" onclick="closeStudy()">✕ 닫기</span>
+        </div>
+        
+        <div id="studyQ" class="study-q">질문이 여기에 표시됩니다.</div>
+        
+        <div id="studyABox" class="study-a-box">
+            <div id="studyA" class="study-a">정답이 여기에 표시됩니다.</div>
+            <button class="btn-tts" onclick="speakAnswer()">🔊 원어민 발음 듣기</button>
+        </div>
+
+        <button id="btnShow" class="btn-primary" onclick="revealAnswer()">정답 보기</button>
+        
+        <div class="action-group">
+            <button id="btnForgot" class="btn-forgot" onclick="handleResult(false)">몰랐어요 (재도전)</button>
+            <button id="btnRemember" class="btn-remember" onclick="handleResult(true)">알아요 (통과)</button>
+        </div>
     </div>
 </div>
 
 <script>
-    // 망각곡선 복습 주기 (단위: 일)
-    const INTERVALS = [1, 3, 7, 15, 30];
+    const INTERVALS = [1, 3, 7, 15, 30]; // 망각곡선 주기 (일)
 
-    // 기본 데이터 (Take 및 Have 동사 데이터 통합 예시)
-    const initialData = [
-        {"id":1791787695373.3538, "verb":"Take", "q":"[take (1)] 내일 저를 공항에 데려다 줄 수 있나요?", "a":"Can you take me to the airport tomorrow?", "stage":1, "nextReview":"2026-10-12"},
-        {"id":1791787695373.8477, "verb":"Take", "q":"[take (1)] 내가 이 노트북 컴퓨터 가져가도 될까요?", "a":"May I take this laptop computer?", "stage":0, "nextReview":"2026-10-12"},
-        {"id":1791787695373.7588, "verb":"Take", "q":"[take (1)] 나를 Danny의 생일 파티에 데려가 줄래요?", "a":"Will you take me to Danny's birthday party?", "stage":0, "nextReview":"2026-10-12"},
-        {"id":1791787695373.61,   "verb":"Take", "q":"[take (2)] 당신은 항상 사무실까지 계단으로 오나요?", "a":"Do you always take the stairs to the office?", "stage":0, "nextReview":"2026-10-12"},
-        {"id":1791787695373.4426, "verb":"Take", "q":"[take (2)] 전 절대 엘리베이터 안 타요.", "a":"I never take the elevator.", "stage":1, "nextReview":"2026-10-12"},
-        {"id":1791788542997.7417, "verb":"Take", "q":"[Take1 심화] 공항까지 제 짐 좀 옮겨(가) 주실 수 있나요?", "a":"Can you take my luggage to the airport?", "stage":1, "nextReview":"2026-10-12"},
-        {"id":1791788542997.0842, "verb":"Take", "q":"[Take1 심화] 비 오니까 이 우산 가져가세요.", "a":"Take this umbrella because it's raining.", "stage":0, "nextReview":"2026-10-12"},
-        {"id":1791788542997.9585, "verb":"Take", "q":"[Take1 심화] 내일 아이들을 놀이공원에 데려갈 생각이에요.", "a":"I am planning to take the kids to the amusement park tomorrow.", "stage":0, "nextReview":"2026-10-12"},
-        {"id":1791788542997.6958, "verb":"Take", "q":"[Take1 심화] 제가 그 서류들을 회의에 가져가는 걸 깜빡했어요.", "a":"I forgot to take those documents to the meeting.", "stage":0, "nextReview":"2026-10-12"},
-        {"id":1791788542997.4272, "verb":"Take", "q":"[Take1 심화] 누군가 내 노트북을 가져간 것 같아요.", "a":"I think someone took my laptop.", "stage":0, "nextReview":"2026-10-12"}
-    ];
+    // 샘플 데이터 셋 (원하시는 데이터 묶음 정의)
+    const sourceData = {
+        take1: [
+            {"id": 1791787695373.1, "q": "[take (1)] 내일 저를 공항에 데려다 줄 수 있나요?", "a": "Can you take me to the airport tomorrow?", "stage": 0, "nextReview": getTodayString()},
+            {"id": 1791787695373.2, "q": "[take (1)] 내가 이 노트북 컴퓨터 가져가도 될까요?", "a": "May I take this laptop computer?", "stage": 0, "nextReview": getTodayString()},
+            {"id": 1791787695373.3, "q": "[take (2)] 당신은 항상 사무실까지 계단으로 오나요?", "a": "Do you always take the stairs to the office?", "stage": 0, "nextReview": getTodayString()}
+        ],
+        take2: [
+            {"id": 1791788542997.1, "q": "[Take 심화] 비 오니까 이 우산 가져가세요.", "a": "Take this umbrella because it's raining.", "stage": 0, "nextReview": getTodayString()},
+            {"id": 1791788542997.2, "q": "[Take 심화] 내일 아이들을 놀이공원에 데려갈 생각이에요.", "a": "I am planning to take the kids to the amusement park tomorrow.", "stage": 0, "nextReview": getTodayString()}
+        ],
+        have1: [
+            {"id": 1791789000001.1, "q": "[Have (1)] 나 그거 미리 확인했어야 했는데.", "a": "I should have checked that in advance.", "stage": 0, "nextReview": getTodayString()},
+            {"id": 1791789000001.2, "q": "[Have (1)] 오늘 오후에 회의가 잡혀 있어요.", "a": "I have a meeting scheduled for this afternoon.", "stage": 0, "nextReview": getTodayString()}
+        ]
+    };
 
-    let sentences = JSON.parse(localStorage.getItem('englishSentences')) || initialData;
-    let todayQueue = [];
+    let sentences = JSON.parse(localStorage.getItem('englishSentences')) || [];
+    let reviewQueue = [];
     let currentIndex = 0;
 
     function getTodayString() {
@@ -202,71 +323,92 @@
         return today.toISOString().split('T')[0];
     }
 
-    // 선택된 필터 및 망각곡선 일자에 따라 문장 필터링
-    function initQueue() {
+    function updateDashboard() {
+        document.getElementById('totalCount').innerText = sentences.length;
+        
         const todayStr = getTodayString();
-        const selectedVerb = document.getElementById('verbFilter').value;
-
-        todayQueue = sentences.filter(item => {
-            const matchesDate = item.nextReview <= todayStr;
-            const matchesVerb = (selectedVerb === 'ALL') || (item.verb === selectedVerb) || (item.q.toLowerCase().includes(selectedVerb.toLowerCase()));
-            return matchesDate && matchesVerb;
-        });
+        const reviewList = sentences.filter(s => s.nextReview <= todayStr);
+        document.getElementById('reviewCount').innerText = reviewList.length;
     }
 
-    function loadCard() {
-        initQueue();
-        const countBadge = document.getElementById('queueCount');
-        countBadge.innerText = `남은 ${todayQueue.length}개`;
+    // 진도별 데이터 추가 함수
+    function addBatch(key) {
+        const batch = sourceData[key];
+        if (!batch) return;
 
-        if (todayQueue.length === 0) {
-            document.getElementById('studyArea').style.display = 'none';
-            document.getElementById('completeArea').style.display = 'block';
+        let addedCount = 0;
+        batch.forEach(newItem => {
+            // 중복 아이디가 없을 때만 추가
+            if (!sentences.some(s => s.q === newItem.q)) {
+                sentences.push(JSON.parse(JSON.stringify(newItem)));
+                addedCount++;
+            }
+        });
+
+        localStorage.setItem('englishSentences', JSON.stringify(sentences));
+        updateDashboard();
+        alert(`${addedCount}개의 문장이 학습 진도에 추가되었습니다!`);
+    }
+
+    // 복습 시작
+    function startReview() {
+        const todayStr = getTodayString();
+        reviewQueue = sentences.filter(s => s.nextReview <= todayStr);
+
+        if (reviewQueue.length === 0) {
+            alert("오늘 복습할 문장이 없습니다! 진도를 새로 추가하거나 내일 다시 이용해주세요.");
             return;
         }
 
-        document.getElementById('studyArea').style.display = 'block';
-        document.getElementById('completeArea').style.display = 'none';
-
         currentIndex = 0;
-        const currentItem = todayQueue[currentIndex];
+        document.getElementById('studyModal').style.display = 'flex';
+        loadStudyCard();
+    }
 
-        document.getElementById('questionText').innerText = currentItem.q;
-        document.getElementById('answerText').innerText = currentItem.a;
-        document.getElementById('answerContainer').style.display = 'none';
+    function closeStudy() {
+        document.getElementById('studyModal').style.display = 'none';
+        updateDashboard();
+    }
 
-        document.getElementById('showBtn').style.display = 'block';
-        document.getElementById('forgotBtn').style.display = 'none';
-        document.getElementById('rememberBtn').style.display = 'none';
+    function loadStudyCard() {
+        if (currentIndex >= reviewQueue.length) {
+            alert("🎉 오늘의 복습을 모두 완료했습니다!");
+            closeStudy();
+            return;
+        }
+
+        const item = reviewQueue[currentIndex];
+        document.getElementById('studyProgress').innerText = `${currentIndex + 1} / ${reviewQueue.length}`;
+        document.getElementById('studyQ').innerText = item.q;
+        document.getElementById('studyA').innerText = item.a;
+
+        document.getElementById('studyABox').style.display = 'none';
+        document.getElementById('btnShow').style.display = 'block';
+        document.getElementById('btnForgot').style.display = 'none';
+        document.getElementById('btnRemember').style.display = 'none';
     }
 
     function revealAnswer() {
-        document.getElementById('answerContainer').style.display = 'block';
-        document.getElementById('showBtn').style.display = 'none';
-        document.getElementById('forgotBtn').style.display = 'block';
-        document.getElementById('rememberBtn').style.display = 'block';
-        
-        // 정답 공개 시 자동으로 원어민 발음 1회 재생
-        speakAnswer();
+        document.getElementById('studyABox').style.display = 'block';
+        document.getElementById('btnShow').style.display = 'none';
+        document.getElementById('btnForgot').style.display = 'block';
+        document.getElementById('btnRemember').style.display = 'block';
+
+        speakAnswer(); // 정답 공개 시 원어민 발음 자동 재생
     }
 
-    // iOS Safari 지원 Web Speech API (TTS) 기능
     function speakAnswer() {
-        const text = document.getElementById('answerText').innerText;
+        const text = document.getElementById('studyA').innerText;
         if (!text) return;
-
-        // 기존에 말하고 있는 음성이 있다면 취소
         window.speechSynthesis.cancel();
-
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'en-US'; // 미국식 영어
-        utterance.rate = 0.9;     // 회화 학습에 적합한 약간 천천히 읽는 속도
-
+        utterance.lang = 'en-US';
+        utterance.rate = 0.9;
         window.speechSynthesis.speak(utterance);
     }
 
     function handleResult(isRemembered) {
-        const currentItem = todayQueue[currentIndex];
+        const currentItem = reviewQueue[currentIndex];
         const target = sentences.find(s => s.id === currentItem.id);
         const today = new Date();
 
@@ -281,15 +423,31 @@
         nextDate.setDate(today.getDate() + addDays);
         target.nextReview = nextDate.toISOString().split('T')[0];
 
-        // 로컬스토리지 저장
         localStorage.setItem('englishSentences', JSON.stringify(sentences));
 
-        // 다음 문장 불러오기
-        loadCard();
+        currentIndex++;
+        loadStudyCard();
     }
 
+    function backupData() {
+        const dataStr = JSON.stringify(sentences, null, 2);
+        navigator.clipboard.writeText(dataStr).then(() => {
+            alert("전체 데이터가 클립보드에 복사되었습니다. 메모장에 백업해 두세요!");
+        });
+    }
+
+    function resetData() {
+        if (confirm("정말로 모든 데이터를 초기화하시겠습니까?")) {
+            localStorage.removeItem('englishSentences');
+            sentences = [];
+            updateDashboard();
+            alert("초기화되었습니다.");
+        }
+    }
+
+    // 페이지 로드 시 대시보드 상태 갱신
     window.onload = function() {
-        loadCard();
+        updateDashboard();
     };
 </script>
 
