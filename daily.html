@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>일상표현 - 망각곡선 회화 학습 앱</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --inner-card: #334155;
+      --accent-color: #6366f1;
+      --accent-hover: #4f46e5;
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+      --danger: #ef4444;
+      --success: #22c55e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg-color); color: var(--text-main); padding: 16px; max-width: 600px; margin: 0 auto; padding-bottom: 60px; }
+    header { text-align: center; margin-bottom: 20px; }
+    header h1 { font-size: 22px; color: var(--text-main); }
+    header p { font-size: 13px; color: var(--text-sub); margin-top: 4px; }
+    
+    .section-card { background: var(--card-bg); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .section-title { font-size: 16px; font-weight: bold; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+    
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .stat-box { background: var(--inner-card); padding: 12px; border-radius: 8px; text-align: center; }
+    .stat-box .num { font-size: 20px; font-weight: bold; margin-top: 4px; color: #38bdf8; }
+    .stat-box .num.today { color: #f43f5e; }
+
+    .btn-group { display: flex; flex-direction: column; gap: 8px; }
+    button { background: var(--accent-color); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    button:active { opacity: 0.8; }
+    button.secondary { background: var(--inner-card); color: var(--text-main); }
+    button.danger { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+
+    .selector-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    select { flex: 1; background: var(--inner-card); color: var(--text-main); border: 1px solid #475569; padding: 12px; border-radius: 8px; font-size: 14px; outline: none; }
+
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center; padding: 16px; }
+    .modal-content { background: var(--card-bg); width: 100%; max-width: 500px; border-radius: 12px; padding: 20px; max-height: 90vh; overflow-y: auto; }
+    textarea { width: 100%; height: 180px; background: var(--inner-card); border: 1px solid #475569; color: white; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 12px; margin-top: 8px; }
+    
+    .quiz-card { background: var(--inner-card); border-radius: 8px; padding: 20px; text-align: center; min-height: 150px; display: flex; flex-direction: column; justify-content: center; margin-bottom: 12px; }
+    .quiz-q { font-size: 18px; font-weight: bold; margin-bottom: 10px; white-space: pre-wrap; }
+    .quiz-a { font-size: 16px; color: #38bdf8; margin-top: 10px; display: none; white-space: pre-wrap; }
+    
+    .btn-tts { background: #1e293b; color: #38bdf8; border: 1px solid #334155; padding: 8px 12px; border-radius: 20px; font-size: 0.9rem; cursor: pointer; margin-top: 10px; display: none; width: 100%; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>일상표현</h1>
+    <p>교재 기반 망각곡선 맞춤 회화 트레이닝</p>
+  </header>
+
+  <!-- 학습 섹션 -->
+  <div class="section-card">
+    <div class="section-title">💬 일상회화 영작 학습</div>
+    <div class="stats-grid">
+      <div class="stat-box">전체 문장<div class="num" id="total-count">0</div></div>
+      <div class="stat-box">오늘 복습<div class="num today" id="today-count">0</div></div>
+    </div>
+    <div class="btn-group">
+      <button onclick="startStudy()">오늘의 회화 복습 시작하기</button>
+      <button class="secondary" onclick="startPractice()">🆕 오늘 새로 추가된 내용 보기</button>
+    </div>
+  </div>
+
+  <!-- 챕터 및 유닛 선택형 진도 추가 섹션 -->
+  <div class="section-card">
+    <div class="section-title">📚 챕터별 진도 추가</div>
+    <div class="selector-row">
+      <select id="chapterSelect">
+        <script>
+          for(let i=1; i<=16; i++) {
+            document.write(`<option value="Chapter ${i}">Chapter ${i}</option>`);
+          }
+        </script>
+      </select>
+      <select id="unitSelect">
+        <script>
+          for(let i=1; i<=8; i++) {
+            document.write(`<option value="Unit ${i}">Unit ${i}</option>`);
+          }
+        </script>
+      </select>
+    </div>
+    <button class="secondary" onclick="openModal('add-modal')">+ AI 소스 붙여넣기 (JSON)</button>
+  </div>
+
+  <!-- 데이터 관리 -->
+  <div class="section-card">
+    <div class="btn-group">
+      <button class="secondary" onclick="exportData()">💾 데이터 백업 (복사)</button>
+      <button class="danger" onclick="clearAllData()">🗑️ 전체 데이터 초기화</button>
+    </div>
+  </div>
+
+  <!-- 데이터 추가 모달 -->
+  <div id="add-modal" class="modal">
+    <div class="modal-content">
+      <h3>매일 소스 붙여넣기</h3>
+      <p style="font-size: 12px; color: var(--text-sub); margin-top:4px;">AI가 제공해준 JSON 데이터를 아래에 붙여넣으세요.</p>
+      <textarea id="json-input" placeholder='[{"q":"알람 시계가 울리다","a":"the alarm clock goes off"},{"q":"잠결에 몸을 뒤척이다","a":"turn over in bed"}]'></textarea>
+      <div class="btn-group" style="margin-top: 12px;">
+        <button onclick="importJSON()">데이터 추가하기</button>
+        <button class="secondary" onclick="closeModal('add-modal')">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 학습 모달 -->
+  <div id="study-modal" class="modal">
+    <div class="modal-content">
+      <h3 id="study-title" style="margin-bottom: 12px;">학습 진행</h3>
+      <div class="quiz-card">
+        <div class="quiz-q" id="quiz-question">문제</div>
+        <div class="quiz-a" id="quiz-answer">정답 내용</div>
+        <button id="tts-btn" class="btn-tts" onclick="speakAnswer()">🔊 원어민 발음 듣기</button>
+      </div>
+      <div class="btn-group" id="study-controls">
+        <button id="show-answer-btn" onclick="showAnswer()">정답 확인</button>
+        <div id="result-btns" style="display:none; gap:8px;">
+          <button style="background:var(--danger); flex:1;" onclick="submitResult(false)">❌ 틀림 (재도전)</button>
+          <button style="background:var(--success); flex:1;" onclick="submitResult(true)">⭕ 맞음 (통과)</button>
+        </div>
+      </div>
+      <button class="secondary" style="margin-top: 10px; width: 100%;" onclick="closeModal('study-modal')">학습 종료</button>
+    </div>
+  </div>
+
+  <script>
+    const INTERVALS = [1, 3, 7, 14, 30, 999];
+    let db = JSON.parse(localStorage.getItem('daily_expressions_data')) || [];
+    let currentStudyList = [];
+    let currentIndex = 0;
+    let practiceMode = false;
+
+    function saveData() {
+      localStorage.setItem('daily_expressions_data', JSON.stringify(db));
+      updateDashboard();
+    }
+
+    function toDateString(date) {
+      const offset = date.getTimezoneOffset();
+      const local = new Date(date.getTime() - offset * 60000);
+      return local.toISOString().split('T')[0];
+    }
+
+    function getTodayString() {
+      return toDateString(new Date());
+    }
+
+    function updateDashboard() {
+      const today = getTodayString();
+      const dueItems = db.filter(item => item.nextReview <= today && item.addedDate !== today);
+      document.getElementById('total-count').innerText = db.length;
+      document.getElementById('today-count').innerText = dueItems.length;
+    }
+
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; updateDashboard(); }
+
+    function importJSON() {
+      let input = document.getElementById('json-input').value;
+      const chapter = document.getElementById('chapterSelect').value;
+      const unit = document.getElementById('unitSelect').value;
+
+      input = input.trim()
+        .replace(/[\u201C\u201D\u2033]/g, '"')
+        .replace(/[\u2018\u2019]/g, "'")
+        .replace(/^```(json)?/i, '')
+        .replace(/```$/, '')
+        .trim();
+
+      try {
+        const data = JSON.parse(input);
+        const today = getTodayString();
+        let addedCount = 0;
+
+        data.forEach((rawItem, idx) => {
+          if (!rawItem.q || !rawItem.a) return;
+          const prefix = `[${chapter} ${unit}] `;
+          const qText = rawItem.q.startsWith('[') ? rawItem.q : prefix + rawItem.q;
+
+          if (!db.some(e => e.q === qText)) {
+            db.push({
+              id: Date.now().toString(36) + '-' + idx + '-' + Math.random().toString(36).slice(2, 8),
+              q: qText,
+              a: rawItem.a,
+              stage: 0,
+              nextReview: today,
+              addedDate: today
+            });
+            addedCount++;
+          }
+        });
+
+        saveData();
+        alert(`${addedCount}개의 표현이 [${chapter} ${unit}] 진도에 추가되었습니다!`);
+        document.getElementById('json-input').value = '';
+        closeModal('add-modal');
+      } catch (e) {
+        alert("JSON 형식 오류: " + e.message);
+      }
+    }
+
+    function shuffleArray(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function startStudy() {
+      const today = getTodayString();
+      practiceMode = false;
+      currentStudyList = shuffleArray(db.filter(item => item.nextReview <= today && item.addedDate !== today));
+      
+      if (currentStudyList.length === 0) {
+        alert("오늘 복습할 항목이 없습니다!");
+        return;
+      }
+
+      currentIndex = 0;
+      openModal('study-modal');
+      renderQuiz();
+    }
+
+    function startPractice() {
+      const today = getTodayString();
+      practiceMode = true;
+      currentStudyList = shuffleArray(db.filter(item => item.addedDate === today));
+
+      if (currentStudyList.length === 0) {
+        alert("오늘 새로 추가된 항목이 없습니다!");
+        return;
+      }
+
+      currentIndex = 0;
+      openModal('study-modal');
+      renderQuiz();
+    }
+
+    function renderQuiz() {
+      const item = currentStudyList[currentIndex];
+      const titlePrefix = practiceMode ? "🆕 신규 학습" : "복습";
+      document.getElementById('study-title').innerText = `${titlePrefix} (${currentIndex + 1}/${currentStudyList.length})`;
+      document.getElementById('quiz-question').innerText = item.q;
+      
+      const answerEl = document.getElementById('quiz-answer');
+      answerEl.innerText = item.a;
+      answerEl.style.display = 'none';
+
+      document.getElementById('tts-btn').style.display = 'none';
+      document.getElementById('show-answer-btn').style.display = 'block';
+      document.getElementById('result-btns').style.display = 'none';
+    }
+
+    function showAnswer() {
+      document.getElementById('quiz-answer').style.display = 'block';
+      document.getElementById('tts-btn').style.display = 'block';
+      document.getElementById('show-answer-btn').style.display = 'none';
+      document.getElementById('result-btns').style.display = 'flex';
+
+      speakAnswer();
+    }
+
+    function speakAnswer() {
+      const text = document.getElementById('quiz-answer').innerText;
+      if (!text) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.9;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function submitResult(isCorrect) {
+      window.speechSynthesis.cancel();
+      const item = currentStudyList[currentIndex];
+
+      if (!practiceMode) {
+        const dbItem = db.find(e => e.id === item.id);
+        if (dbItem) {
+          if (isCorrect) {
+            dbItem.stage = Math.min(dbItem.stage + 1, INTERVALS.length - 1);
+          } else {
+            dbItem.stage = 0;
+          }
+
+          const nextDays = INTERVALS[dbItem.stage];
+          const nextDate = new Date();
+          nextDate.setDate(nextDate.getDate() + nextDays);
+          dbItem.nextReview = toDateString(nextDate);
+          saveData();
+        }
+      }
+
+      if (!isCorrect) {
+        currentStudyList.push(item); // 틀린 문제 세션 내 재등장
+      }
+
+      currentIndex++;
+      if (currentIndex < currentStudyList.length) {
+        renderQuiz();
+      } else {
+        alert(practiceMode ? "신규 학습을 모두 마쳤습니다!" : "오늘의 복습을 모두 마쳤습니다!");
+        practiceMode = false;
+        closeModal('study-modal');
+      }
+    }
+
+    function exportData() {
+      navigator.clipboard.writeText(JSON.stringify(db));
+      alert("데이터가 클립보드에 복사되었습니다.");
+    }
+
+    function clearAllData() {
+      if (confirm("정말 모든 데이터를 초기화하시겠습니까?")) {
+        db = [];
+        saveData();
+      }
+    }
+
+    updateDashboard();
+  </script>
+</body>
+</html>
