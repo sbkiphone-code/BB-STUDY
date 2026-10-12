@@ -2,313 +2,249 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>5대 핵심동사 카드 학습</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>5대 동사 회화 트레이닝</title>
   <style>
     :root {
-      --primary: #2563eb;
-      --bg: #f8fafc;
-      --card-bg: #ffffff;
-      --text: #0f172a;
-      --subtext: #475569;
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --inner-card: #334155;
+      --accent-color: #2563eb;
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+      --danger: #ef4444;
+      --success: #22c55e;
     }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .container {
-      max-width: 500px;
-      width: 100%;
-    }
-    h1 {
-      text-align: center;
-      font-size: 1.4rem;
-      color: var(--primary);
-      margin-bottom: 20px;
-    }
-    /* 카드 스타일 */
-    .card-container {
-      perspective: 1000px;
-      margin-bottom: 20px;
-    }
-    .card {
-      width: 100%;
-      min-height: 220px;
-      background: var(--card-bg);
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-      padding: 24px;
-      box-sizing: border-box;
-      cursor: pointer;
-      transition: transform 0.6s;
-      transform-style: preserve-3d;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-    }
-    .card.flipped {
-      transform: rotateY(180deg);
-    }
-    .card-front, .card-back {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      backface-visibility: hidden;
-      padding: 24px;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
-    .card-back {
-      transform: rotateY(180deg);
-    }
-    .badge {
-      background: #eff6ff;
-      color: var(--primary);
-      font-weight: bold;
-      font-size: 0.85rem;
-      padding: 4px 12px;
-      border-radius: 20px;
-      margin-bottom: 12px;
-    }
-    .kr-text {
-      font-size: 1.25rem;
-      font-weight: 700;
-      word-break: keep-all;
-    }
-    .en-text {
-      font-size: 1.35rem;
-      font-weight: 800;
-      color: var(--primary);
-      word-break: keep-all;
-      margin-bottom: 8px;
-    }
-    .hint {
-      font-size: 0.9rem;
-      color: var(--subtext);
-      background: #f1f5f9;
-      padding: 6px 12px;
-      border-radius: 8px;
-      margin-top: 8px;
-    }
-    .click-guide {
-      font-size: 0.8rem;
-      color: #94a3b8;
-      margin-top: 15px;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg-color); color: var(--text-main); padding: 16px; max-width: 600px; margin: 0 auto; padding-bottom: 60px; }
+    header { text-align: center; margin-bottom: 20px; }
+    header h1 { font-size: 22px; color: var(--text-main); }
+    header p { font-size: 13px; color: var(--text-sub); margin-top: 4px; }
+    
+    .section-card { background: var(--card-bg); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .section-title { font-size: 16px; font-weight: bold; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+    
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .stat-box { background: var(--inner-card); padding: 12px; border-radius: 8px; text-align: center; }
+    .stat-box .num { font-size: 20px; font-weight: bold; margin-top: 4px; color: #38bdf8; }
+    .stat-box .num.today { color: #f43f5e; }
 
-    /* 추가 예문 영역 */
-    .extra-section {
-      background: var(--card-bg);
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
-      margin-bottom: 20px;
-    }
-    .extra-title {
-      font-size: 0.95rem;
-      font-weight: bold;
-      color: var(--subtext);
-      margin-bottom: 12px;
-      border-bottom: 2px solid #f1f5f9;
-      padding-bottom: 6px;
-    }
-    .extra-item {
-      margin-bottom: 12px;
-      text-align: left;
-    }
-    .extra-item:last-child {
-      margin-bottom: 0;
-    }
-    .extra-kr {
-      font-size: 0.9rem;
-      color: #334155;
-    }
-    .extra-en {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #1e293b;
-    }
+    .btn-group { display: flex; flex-direction: column; gap: 8px; }
+    button { background: var(--accent-color); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    button:active { opacity: 0.8; }
+    button.secondary { background: var(--inner-card); color: var(--text-main); }
+    button.danger { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+    button.step-btn { background: #334155; border: 1px solid #475569; text-align: left; display: flex; justify-content: space-between; align-items: center; }
 
-    /* 네비게이션 버튼 */
-    .controls {
-      display: flex;
-      gap: 12px;
-    }
-    button {
-      flex: 1;
-      padding: 14px;
-      border: none;
-      border-radius: 12px;
-      background: var(--primary);
-      color: white;
-      font-size: 1rem;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
-    }
-    button:active {
-      opacity: 0.9;
-    }
-    button.secondary {
-      background: #e2e8f0;
-      color: #334155;
-      box-shadow: none;
-    }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center; padding: 16px; }
+    .modal-content { background: var(--card-bg); width: 100%; max-width: 500px; border-radius: 12px; padding: 20px; max-height: 90vh; overflow-y: auto; }
+    
+    .quiz-card { background: var(--inner-card); border-radius: 8px; padding: 20px; text-align: center; min-height: 150px; display: flex; flex-direction: column; justify-content: center; margin-bottom: 12px; }
+    .quiz-q { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+    .quiz-a { font-size: 16px; color: #38bdf8; margin-top: 10px; display: none; }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <h1>5대 핵심동사 회화 카드</h1>
+  <header>
+    <h1>5대 동사 회화 트레이닝</h1>
+    <p>버튼만 누르면 단계별 진도가 앱에 자동 추가됩니다</p>
+  </header>
 
-  <!-- 플래시 카드 -->
-  <div class="card-container">
-    <div class="card" id="card" onclick="flipCard()">
-      <div class="card-front">
-        <span class="badge" id="verb-badge">take</span>
-        <div class="kr-text" id="kr-text">한국어 문장</div>
-        <div class="click-guide">💡 터치해서 영어 정답 확인</div>
-      </div>
-      <div class="card-back">
-        <div class="en-text" id="en-text">English Sentence</div>
-        <div class="hint" id="hint-text">패턴 힌트</div>
-      </div>
+  <!-- 학습 섹션 -->
+  <div class="section-card">
+    <div class="section-title">💬 회화 영작 학습</div>
+    <div class="stats-grid">
+      <div class="stat-box">전체 문장<div class="num" id="eng-total">0</div></div>
+      <div class="stat-box">오늘 복습<div class="num today" id="eng-today">0</div></div>
+    </div>
+    <div class="btn-group">
+      <button onclick="startStudy()">오늘의 회화 복습 시작하기</button>
     </div>
   </div>
 
-  <!-- 추가 변형 예문 -->
-  <div class="extra-section">
-    <div class="extra-title">✨ 추가 응용 예문</div>
-    <div id="extra-list"></div>
+  <!-- 단계별 진도 추가 섹션 -->
+  <div class="section-card">
+    <div class="section-title">📚 진도별 문제 추가하기</div>
+    <div class="btn-group">
+      <button class="step-btn" onclick="addStep('take1')"><span>📖 Take (1) ~ (2) 학습 추가</span> <span>+ 추가</span></button>
+      <button class="step-btn" onclick="addStep('take2')"><span>📖 Take (3) ~ (4) 학습 추가</span> <span>+ 추가</span></button>
+      <button class="step-btn" onclick="addStep('take3')"><span>📖 Take (5) ~ (6) 학습 추가</span> <span>+ 추가</span></button>
+    </div>
   </div>
 
-  <!-- 컨트롤 버튼 -->
-  <div class="controls">
-    <button class="secondary" onclick="prevCard()">이전</button>
-    <button onclick="nextCard()">다음 카드</button>
+  <!-- 데이터 관리 -->
+  <div class="section-card">
+    <div class="btn-group">
+      <button class="secondary" onclick="exportData()">💾 데이터 백업 (복사)</button>
+      <button class="danger" onclick="clearAllData()">🗑️ 전체 데이터 초기화</button>
+    </div>
   </div>
-</div>
 
-<script>
-  // PDF 자료 및 추가 확장 예문 데이터
-  const studyData = [
-    {
-      verb: "TAKE",
-      kr: "나를 공항까지 데려다줄 수 있어?",
-      en: "Can you take me to the airport?",
-      hint: "take + 사람 + 장소 (~를 어디로 데려다주다)",
-      extras: [
-        { kr: "내가 너 집까지 바래다줄게.", en: "I'll take you home." },
-        { kr: "이 버스를 타면 시청으로 가나요?", en: "Does this bus take me to City Hall?" }
-      ]
-    },
-    {
-      verb: "TAKE",
-      kr: "이 약을 하루에 세 번 드세요.",
-      en: "Take this medicine three times a day.",
-      hint: "take + 약/음식 (약이나 음료를 복용하다)",
-      extras: [
-        { kr: "비타민 챙겨 먹는 거 잊지 마.", en: "Don't forget to take your vitamins." },
-        { kr: "심호흡하고 좀 쉬어.", en: "Take a deep breath and take a break." }
-      ]
-    },
-    {
-      verb: "MAKE",
-      kr: "내가 오늘 밤 저녁 저녁 식사를 준비할게.",
-      en: "I'll make dinner tonight.",
-      hint: "make + 음식/음료 (음식이나 음료를 만들다)",
-      extras: [
-        { kr: "커피 한 잔 타 줄까?", en: "Can I make you a cup of coffee?" },
-        { kr: "그가 우리를 위해 예약을 해줬어.", en: "He made a reservation for us." }
-      ]
-    },
-    {
-      verb: "HAVE",
-      kr: "오늘 밤에 질문이 몇 개 있어요.",
-      en: "I have a few questions tonight.",
-      hint: "have + 명사 (소유하다/가지고 있다)",
-      extras: [
-        { kr: "좋은 하루 보내세요!", en: "Have a good day!" },
-        { kr: "잠시 이야기 좀 할 수 있을까요?", en: "Do you have a minute to talk?" }
-      ]
-    },
-    {
-      verb: "GET",
-      kr: "나 방금 너 메시지 받았어.",
-      en: "I just got your message.",
-      hint: "get + 명사 (받다/얻다)",
-      extras: [
-        { kr: "어제 새 전화기 샀어.", en: "I got a new phone yesterday." },
-        { kr: "이해했어! (알아들었어)", en: "I get it!" }
-      ]
-    },
-    {
-      verb: "DO",
-      kr: "너 오늘 오후에 뭐 할 거야?",
-      en: "What are you going to do this afternoon?",
-      hint: "do + 행동 (행동이나 활동을 하다)",
-      extras: [
-        { kr: "최선을 다해봐!", en: "Just do your best!" },
-        { kr: "나 주말마다 집안일을 해.", en: "I do the housework on weekends." }
-      ]
-    }
-  ];
-
-  let currentIndex = 0;
-  const card = document.getElementById('card');
-
-  function renderCard() {
-    const data = studyData[currentIndex];
-    
-    // 카드 뒤집혀 있으면 원상복구
-    card.classList.remove('flipped');
-
-    setTimeout(() => {
-      document.getElementById('verb-badge').innerText = data.verb;
-      document.getElementById('kr-text').innerText = data.kr;
-      document.getElementById('en-text').innerText = data.en;
-      document.getElementById('hint-text').innerText = data.hint;
-
-      // 추가 예문 출력
-      const extraList = document.getElementById('extra-list');
-      extraList.innerHTML = data.extras.map(item => `
-        <div class="extra-item">
-          <div class="extra-kr">• ${item.kr}</div>
-          <div class="extra-en">&nbsp;&nbsp;${item.en}</div>
+  <!-- 학습 모달 -->
+  <div id="study-modal" class="modal">
+    <div class="modal-content">
+      <h3 id="study-title" style="margin-bottom: 12px;">학습 진행</h3>
+      <div class="quiz-card">
+        <div class="quiz-q" id="quiz-question">문제</div>
+        <div class="quiz-a" id="quiz-answer">정답 내용</div>
+      </div>
+      <div class="btn-group" id="study-controls">
+        <button id="show-answer-btn" onclick="showAnswer()">정답 확인</button>
+        <div id="result-btns" style="display:none; gap:8px;">
+          <button style="background:var(--danger); flex:1;" onclick="submitResult(false)">❌ 틀림 (내일 재복습)</button>
+          <button style="background:var(--success); flex:1;" onclick="submitResult(true)">⭕ 맞음 (다음 단계)</button>
         </div>
-      `).join('');
-    }, 150);
-  }
+      </div>
+      <button class="secondary" style="margin-top: 10px; width: 100%;" onclick="closeModal('study-modal')">학습 종료</button>
+    </div>
+  </div>
 
-  function flipCard() {
-    card.classList.toggle('flipped');
-  }
+  <script>
+    // 교재 단계별 문제 데이터 베이스 미리 내장
+    const COURSE_DATA = {
+      take1: [
+        {q: "[take (1)] 내일 저를 공항에 데려다 줄 수 있나요?", a: "Can you take me to the airport tomorrow?"},
+        {q: "[take (1)] 내가 이 노트북 컴퓨터 가져가도 될까요?", a: "May I take this laptop computer?"},
+        {q: "[take (1)] 나를 Danny의 생일 파티에 데려가 줄래요?", a: "Will you take me to Danny's birthday party?"},
+        {q: "[take (2)] 당신은 항상 사무실까지 계단으로 오나요?", a: "Do you always take the stairs to the office?"},
+        {q: "[take (2)] 전 절대 엘리베이터 안 타요.", a: "I never take the elevator."}
+      ],
+      take2: [
+        {q: "[take (3)] 비행기로 부산 가는 데 시간이 얼마나 걸려요?", a: "How long does it take to go to Busan by plane?"},
+        {q: "[take (3)] 거기 가는 데 약 30분 걸려요.", a: "It takes about 30 minutes to get there."},
+        {q: "[take (4)] 저기, 저한테 내일 시간 좀 내줄 수 있어요?", a: "Can you take some time for me tomorrow?"},
+        {q: "[take (4)] 우리를 위해 시간 내 주셔서 고마워요.", a: "Thank you for taking the time for us."}
+      ],
+      take3: [
+        {q: "[take (5)] 저는 이 수업을 반 년 넘게 수강하고 있어요.", a: "I have been taking this class for over half a year."},
+        {q: "[take (5)] 난 이번 달에 이 과정 듣고 있어.", a: "I am taking this course this month."},
+        {q: "[take (6)] 오픽 시험 본 적 있어?", a: "Have you ever taken the OPIc test?"},
+        {q: "[take (6)] 나 내일 운전면허 시험 봐.", a: "I am taking a driver's license test tomorrow."}
+      ]
+    };
 
-  function nextCard() {
-    currentIndex = (currentIndex + 1) % studyData.length;
-    renderCard();
-  }
+    const INTERVALS = [1, 3, 7, 14, 30, 999];
+    let db = JSON.parse(localStorage.getItem('english_curve_data')) || [];
+    let currentStudyList = [];
+    let currentIndex = 0;
 
-  function prevCard() {
-    currentIndex = (currentIndex - 1 + studyData.length) % studyData.length;
-    renderCard();
-  }
+    function saveData() {
+      localStorage.setItem('english_curve_data', JSON.stringify(db));
+      updateDashboard();
+    }
 
-  // 초기 로드
-  renderCard();
-</script>
+    function getTodayString() {
+      return new Date().toISOString().split('T')[0];
+    }
 
+    function updateDashboard() {
+      const today = getTodayString();
+      const dueItems = db.filter(item => item.nextReview <= today);
+      document.getElementById('eng-total').innerText = db.length;
+      document.getElementById('eng-today').innerText = dueItems.length;
+    }
+
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; updateDashboard(); }
+
+    function addStep(stepKey) {
+      const stepItems = COURSE_DATA[stepKey];
+      if (!stepItems) return;
+
+      const today = getTodayString();
+      let addedCount = 0;
+
+      stepItems.forEach(item => {
+        if (!db.some(e => e.q === item.q)) {
+          db.push({
+            id: Date.now() + Math.random(),
+            q: item.q,
+            a: item.a,
+            stage: 0,
+            nextReview: today
+          });
+          addedCount++;
+        }
+      });
+
+      saveData();
+      alert(`${addedCount}개의 문장이 추가되었습니다! 오늘 복습을 시작해보세요.`);
+    }
+
+    function startStudy() {
+      const today = getTodayString();
+      currentStudyList = db.filter(item => item.nextReview <= today);
+      
+      if (currentStudyList.length === 0) {
+        alert("오늘 복습할 문장이 없습니다! 아래 버튼에서 진도를 추가해 보세요.");
+        return;
+      }
+
+      currentIndex = 0;
+      openModal('study-modal');
+      renderQuiz();
+    }
+
+    function renderQuiz() {
+      const item = currentStudyList[currentIndex];
+      document.getElementById('study-title').innerText = `학습 (${currentIndex + 1}/${currentStudyList.length})`;
+      document.getElementById('quiz-question').innerText = item.q;
+      
+      const answerEl = document.getElementById('quiz-answer');
+      answerEl.innerText = item.a;
+      answerEl.style.display = 'none';
+
+      document.getElementById('show-answer-btn').style.display = 'block';
+      document.getElementById('result-btns').style.display = 'none';
+    }
+
+    function showAnswer() {
+      document.getElementById('quiz-answer').style.display = 'block';
+      document.getElementById('show-answer-btn').style.display = 'none';
+      document.getElementById('result-btns').style.display = 'flex';
+    }
+
+    function submitResult(isCorrect) {
+      const item = currentStudyList[currentIndex];
+      const dbItem = db.find(e => e.id === item.id);
+
+      if (dbItem) {
+        if (isCorrect) {
+          dbItem.stage = Math.min(dbItem.stage + 1, INTERVALS.length - 1);
+        } else {
+          dbItem.stage = 0;
+        }
+
+        const nextDays = INTERVALS[dbItem.stage];
+        const nextDate = new Date();
+        nextDate.setDate(nextDate.getDate() + nextDays);
+        dbItem.nextReview = nextDate.toISOString().split('T')[0];
+        saveData();
+      }
+
+      currentIndex++;
+      if (currentIndex < currentStudyList.length) {
+        renderQuiz();
+      } else {
+        alert("오늘의 복습을 모두 마쳤습니다! 수고하셨습니다.");
+        closeModal('study-modal');
+      }
+    }
+
+    function exportData() {
+      navigator.clipboard.writeText(JSON.stringify(db));
+      alert("데이터가 클립보드에 복사되었습니다.");
+    }
+
+    function clearAllData() {
+      if (confirm("정말 모든 회화 데이터를 초기화하시겠습니까?")) {
+        db = [];
+        saveData();
+      }
+    }
+
+    updateDashboard();
+  </script>
 </body>
 </html>
