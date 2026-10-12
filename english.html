@@ -35,8 +35,10 @@
     button:active { opacity: 0.8; }
     button.secondary { background: var(--inner-card); color: var(--text-main); }
     button.danger { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
-    button.step-btn { background: #334155; border: 1px solid #475569; text-align: left; display: flex; justify-content: space-between; align-items: center; }
-    button.deep-btn { background: #4c1d95; border: 1px solid #7c3aed; text-align: left; display: flex; justify-content: space-between; align-items: center; color: #e9d5ff; }
+
+    /* 드롭다운 한 줄 배치 스타일 */
+    .selector-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    select { flex: 1; background: var(--inner-card); color: var(--text-main); border: 1px solid #475569; padding: 12px; border-radius: 8px; font-size: 14px; outline: none; }
 
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center; padding: 16px; }
     .modal-content { background: var(--card-bg); width: 100%; max-width: 500px; border-radius: 12px; padding: 20px; max-height: 90vh; overflow-y: auto; }
@@ -52,7 +54,7 @@
 
   <header>
     <h1>5대 동사 회화 트레이닝</h1>
-    <p>기본 진도 및 5대 동사 심화 응용 트레이닝</p>
+    <p>망각곡선 맞춤형 회화 및 심화 학습</p>
   </header>
 
   <!-- 학습 섹션 -->
@@ -67,26 +69,28 @@
     </div>
   </div>
 
-  <!-- 단계별 진도 추가 섹션 (Take 중심 기본 과정) -->
+  <!-- 동사 및 단계 선택형 진도 추가 섹션 (깔끔한 2중 드롭다운) -->
   <div class="section-card">
-    <div class="section-title">📚 기본 과정 진도 추가</div>
-    <div class="btn-group">
-      <button class="step-btn" onclick="addStep('take1')"><span>📖 Take (1) ~ (2) 학습 추가</span> <span>+ 추가</span></button>
-      <button class="step-btn" onclick="addStep('take2')"><span>📖 Take (3) ~ (4) 학습 추가</span> <span>+ 추가</span></button>
-      <button class="step-btn" onclick="addStep('take3')"><span>📖 Take (5) ~ (6) 학습 추가</span> <span>+ 추가</span></button>
+    <div class="section-title">📚 진도 및 심화 과정 추가</div>
+    <div class="selector-row">
+      <!-- 동사 선택 -->
+      <select id="verbSelect">
+        <option value="take">Take 동사</option>
+        <option value="have">Have 동사</option>
+        <option value="get">Get 동사</option>
+        <option value="make">Make 동사</option>
+        <option value="give">Give 동사</option>
+      </select>
+      <!-- 과정/파트 선택 -->
+      <select id="partSelect">
+        <option value="part1">1일차 (Part 1)</option>
+        <option value="part2">2일차 (Part 2)</option>
+        <option value="part3">3일차 (Part 3)</option>
+        <option value="part4">4일차 (Part 4)</option>
+        <option value="deep">🔥 심화 응용 과정</option>
+      </select>
     </div>
-  </div>
-
-  <!-- 5대 동사 심화 응용 과정 섹션 -->
-  <div class="section-card">
-    <div class="section-title">🔥 5대 동사 심화 응용 트레이닝</div>
-    <div class="btn-group">
-      <button class="deep-btn" onclick="addStep('take_deep')"><span>⚡ Take 동사 심화 응용 문장 추가</span> <span>+ 추가</span></button>
-      <button class="deep-btn" onclick="addStep('have_deep')"><span>⚡ Have 동사 심화 응용 문장 추가</span> <span>+ 추가</span></button>
-      <button class="deep-btn" onclick="addStep('get_deep')"><span>⚡ Get 동사 심화 응용 문장 추가</span> <span>+ 추가</span></button>
-      <button class="deep-btn" onclick="addStep('make_deep')"><span>⚡ Make 동사 심화 응용 문장 추가</span> <span>+ 추가</span></button>
-      <button class="deep-btn" onclick="addStep('give_deep')"><span>⚡ Give 동사 심화 응용 문장 추가</span> <span>+ 추가</span></button>
-    </div>
+    <button style="width: 100%; background: #334155; border: 1px solid #475569;" onclick="addSelectedCourse()">+ 선택한 진도 학습 추가하기</button>
   </div>
 
   <!-- 데이터 관리 -->
@@ -118,58 +122,59 @@
   </div>
 
   <script>
+    // 5대 동사별 [Part 1~4] 및 [심화 과정] 전체 데이터베이스 구조
     const COURSE_DATA = {
-      take1: [
-        {q: "[take (1)] 내일 저를 공항에 데려다 줄 수 있나요?", a: "Can you take me to the airport tomorrow?"},
-        {q: "[take (1)] 내가 이 노트북 컴퓨터 가져가도 될까요?", a: "May I take this laptop computer?"},
-        {q: "[take (1)] 나를 Danny의 생일 파티에 데려가 줄래요?", a: "Will you take me to Danny's birthday party?"},
-        {q: "[take (2)] 당신은 항상 사무실까지 계단으로 오나요?", a: "Do you always take the stairs to the office?"},
-        {q: "[take (2)] 전 절대 엘리베이터 안 타요.", a: "I never take the elevator."}
-      ],
-      take2: [
-        {q: "[take (3)] 비행기로 부산 가는 데 시간이 얼마나 걸려요?", a: "How long does it take to go to Busan by plane?"},
-        {q: "[take (3)] 거기 가는 데 약 30분 걸려요.", a: "It takes about 30 minutes to get there."},
-        {q: "[take (4)] 저기, 저한테 내일 시간 좀 내줄 수 있어요?", a: "Can you take some time for me tomorrow?"},
-        {q: "[take (4)] 우리를 위해 시간 내 주셔서 고마워요.", a: "Thank you for taking the time for us."}
-      ],
-      take3: [
-        {q: "[take (5)] 저는 이 수업을 반 년 넘게 수강하고 있어요.", a: "I have been taking this class for over half a year."},
-        {q: "[take (5)] 난 이번 달에 이 과정 듣고 있어.", a: "I am taking this course this month."},
-        {q: "[take (6)] 오픽 시험 본 적 있어?", a: "Have you ever taken the OPIc test?"},
-        {q: "[take (6)] 나 내일 운전면허 시험 봐.", a: "I am taking a driver's license test tomorrow."}
-      ],
-      // 5대 동사별 확장된 심화 응용 문장 데이터
-      take_deep: [
-        {q: "[Take 심화] 공항까지 제 짐 좀 옮겨(가) 주실 수 있나요?", a: "Can you take my luggage to the airport?"},
-        {q: "[Take 심화] 비 오니까 이 우산 가져가세요.", a: "Take this umbrella because it's raining."},
-        {q: "[Take 심화] 내일 아이들을 놀이공원에 데려갈 생각이에요.", a: "I am planning to take the kids to the amusement park tomorrow."},
-        {q: "[Take 심화] 제가 그 서류들을 회의에 가져가는 걸 깜빡했어요.", a: "I forgot to take those documents to the meeting."},
-        {q: "[Take 심화] 누군가 내 노트북을 가져간 것 같아요.", a: "I think someone took my laptop."}
-      ],
-      have_deep: [
-        {q: "[Have 심화] 그거 미리 확인했어야 했는데.", a: "I should have checked that in advance."},
-        {q: "[Have 심화] 오늘 오후에 중요한 미팅이 잡혀 있어요.", a: "I have an important meeting scheduled this afternoon."},
-        {q: "[Have 심화] 나중에 너랑 할 이야기가 좀 있어.", a: "I have something to talk about with you later."},
-        {q: "[Have 심화] 그 문제를 해결할 좋은 아이디어가 있어요.", a: "I have a great idea to solve the problem."}
-      ],
-      get_deep: [
-        {q: "[Get 심화] 다음 정류장에서 내려야 해요.", a: "I need to get off at the next stop."},
-        {q: "[Get 심화] 거기 어떻게 가는지 알려주실 수 있나요?", a: "Can you tell me how to get there?"},
-        {q: "[Get 심화] 요즘 일 때문에 너무 정신이 없어요.", a: "I am getting so busy with work these days."},
-        {q: "[Get 심화] 퇴근길에 커피 한 잔 사다 줄 수 있어?", a: "Can you get me a cup of coffee on your way home?"}
-      ],
-      make_deep: [
-        {q: "[Make 심화] 이 프로젝트는 우리에게 좋은 기회가 될 거예요.", a: "This project will make a great opportunity for us."},
-        {q: "[Make 심화] 주말에 가족들을 위해 요리를 좀 할 계획이에요.", a: "I am planning to make some food for my family this weekend."},
-        {q: "[Make 심화] 제가 당신의 결정을 오해하게 만들어서 미안해요.", a: "I am sorry for making you misunderstand your decision."},
-        {q: "[Make 심화] 내일 모임 시간 잊지 않도록 확실히 해줘.", a: "Make sure you don't forget the meeting time tomorrow."}
-      ],
-      give_deep: [
-        {q: "[Give 심화] 이 문서 좀 한 번 검토해 주실 수 있나요?", a: "Can you give this document a review?"},
-        {q: "[Give 심화] 제 사과를 받아주셨으면 좋겠어요.", a: "I hope you can give me a chance to apologize."},
-        {q: "[Give 심화] 새로운 프로젝트에 대해 자세히 설명해 주세요.", a: "Please give me more details about the new project."},
-        {q: "[Give 심화] 그 제안에 대해 생각할 시간을 좀 주세요.", a: "Give me some time to think about that proposal."}
-      ]
+      take: {
+        part1: [
+          {q: "[Take 1일차] 내일 저를 공항에 데려다 줄 수 있나요?", a: "Can you take me to the airport tomorrow?"},
+          {q: "[Take 1일차] 내가 이 노트북 컴퓨터 가져가도 될까요?", a: "May I take this laptop computer?"}
+        ],
+        part2: [
+          {q: "[Take 2일차] 당신은 항상 사무실까지 계단으로 오나요?", a: "Do you always take the stairs to the office?"},
+          {q: "[Take 2일차] 전 절대 엘리베이터 안 타요.", a: "I never take the elevator."}
+        ],
+        part3: [
+          {q: "[Take 3일차] 비행기로 부산 가는 데 시간이 얼마나 걸려요?", a: "How long does it take to go to Busan by plane?"},
+          {q: "[Take 3일차] 거기 가는 데 약 30분 걸려요.", a: "It takes about 30 minutes to get there."}
+        ],
+        part4: [
+          {q: "[Take 4일차] 저기, 저한테 내일 시간 좀 내줄 수 있어요?", a: "Can you take some time for me tomorrow?"},
+          {q: "[Take 4일차] 우리를 위해 시간 내 주셔서 고마워요.", a: "Thank you for taking the time for us."}
+        ],
+        deep: [
+          {q: "[Take 심화] 공항까지 제 짐 좀 옮겨(가) 주실 수 있나요?", a: "Can you take my luggage to the airport?"},
+          {q: "[Take 심화] 비 오니까 이 우산 가져가세요.", a: "Take this umbrella because it's raining."},
+          {q: "[Take 심화] 내일 아이들을 놀이공원에 데려갈 생각이에요.", a: "I am planning to take the kids to the amusement park tomorrow."}
+        ]
+      },
+      have: {
+        part1: [{q: "[Have 1일차] 나 그거 미리 확인했어야 했는데.", a: "I should have checked that in advance."}],
+        part2: [{q: "[Have 2일차] 오늘 오후에 중요한 미팅이 잡혀 있어요.", a: "I have an important meeting scheduled this afternoon."}],
+        part3: [{q: "[Have 3일차] 나중에 너랑 할 이야기가 좀 있어.", a: "I have something to talk about with you later."}],
+        part4: [{q: "[Have 4일차] 그 문제를 해결할 좋은 아이디어가 있어요.", a: "I have a great idea to solve the problem."}],
+        deep: [{q: "[Have 심화] 혹시 저한테 잔돈 있으신가요?", a: "Do you happen to have any change with you?"}]
+      },
+      get: {
+        part1: [{q: "[Get 1일차] 다음 정류장에서 내려야 해요.", a: "I need to get off at the next stop."}],
+        part2: [{q: "[Get 2일차] 거기 어떻게 가는지 알려주실 수 있나요?", a: "Can you tell me how to get there?"}],
+        part3: [{q: "[Get 3일차] 요즘 일 때문에 너무 정신이 없어요.", a: "I am getting so busy with work these days."}],
+        part4: [{q: "[Get 4일차] 퇴근길에 커피 한 잔 사다 줄 수 있어?", a: "Can you get me a cup of coffee on your way home?"}],
+        deep: [{q: "[Get 심화] 그 소식을 듣고 정말 깜짝 놀랐어.", a: "I got really surprised when I heard the news."}]
+      },
+      make: {
+        part1: [{q: "[Make 1일차] 이 프로젝트는 우리에게 좋은 기회가 될 거예요.", a: "This project will make a great opportunity for us."}],
+        part2: [{q: "[Make 2일차] 주말에 가족들을 위해 요리를 좀 할 계획이에요.", a: "I am planning to make some food for my family this weekend."}],
+        part3: [{q: "[Make 3일차] 제가 당신의 결정을 오해하게 만들어서 미안해요.", a: "I am sorry for making you misunderstand your decision."}],
+        part4: [{q: "[Make 4일차] 내일 모임 시간 잊지 않도록 확실히 해줘.", a: "Make sure you don't forget the meeting time tomorrow."}],
+        deep: [{q: "[Make 심화] 이 기계는 작동하기가 정말 쉬워요.", a: "This machine is really easy to make work."}]
+      },
+      give: {
+        part1: [{q: "[Give 1일차] 이 문서 좀 한 번 검토해 주실 수 있나요?", a: "Can you give this document a review?"}],
+        part2: [{q: "[Give 2일차] 제 사과를 받아주셨으면 좋겠어요.", a: "I hope you can give me a chance to apologize."}],
+        part3: [{q: "[Give 3일차] 새로운 프로젝트에 대해 자세히 설명해 주세요.", a: "Please give me more details about the new project."}],
+        part4: [{q: "[Give 4일차] 그 제안에 대해 생각할 시간을 좀 주세요.", a: "Give me some time to think about that proposal."}],
+        deep: [{q: "[Give 심화] 제가 한 번 해볼 수 있게 기회를 주세요.", a: "Give me a chance to try it out."}]
+      }
     };
 
     const INTERVALS = [1, 3, 7, 14, 30, 999];
@@ -196,4 +201,129 @@
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; updateDashboard(); }
 
-    function addStep(
+    // 드롭다운 선택값에 따라 진도 추가
+    function addSelectedCourse() {
+      const verb = document.getElementById('verbSelect').value;
+      const part = document.getElementById('partSelect').value;
+
+      const items = COURSE_DATA[verb] && COURSE_DATA[verb][part] ? COURSE_DATA[verb][part] : [];
+      if (items.length === 0) {
+        alert("선택하신 과정에 등록된 문장이 없습니다.");
+        return;
+      }
+
+      const today = getTodayString();
+      let addedCount = 0;
+
+      items.forEach(item => {
+        if (!db.some(e => e.q === item.q)) {
+          db.push({
+            id: Date.now() + Math.random(),
+            q: item.q,
+            a: item.a,
+            stage: 0,
+            nextReview: today
+          });
+          addedCount++;
+        }
+      });
+
+      saveData();
+      if (addedCount > 0) {
+        alert(`${verb.toUpperCase()} (${part}) 문장 ${addedCount개가 추가되었습니다! 복습을 시작해보세요.`);
+      } else {
+        alert("이미 학습 진도에 추가되어 있는 문장들입니다.");
+      }
+    }
+
+    function startStudy() {
+      const today = getTodayString();
+      currentStudyList = db.filter(item => item.nextReview <= today);
+      
+      if (currentStudyList.length === 0) {
+        alert("오늘 복습할 문장이 없습니다! 진도를 추가해 보세요.");
+        return;
+      }
+
+      currentIndex = 0;
+      openModal('study-modal');
+      renderQuiz();
+    }
+
+    function renderQuiz() {
+      const item = currentStudyList[currentIndex];
+      document.getElementById('study-title').innerText = `학습 (${currentIndex + 1}/${currentStudyList.length})`;
+      document.getElementById('quiz-question').innerText = item.q;
+      
+      const answerEl = document.getElementById('quiz-answer');
+      answerEl.innerText = item.a;
+      answerEl.style.display = 'none';
+
+      document.getElementById('tts-btn').style.display = 'none';
+      document.getElementById('show-answer-btn').style.display = 'block';
+      document.getElementById('result-btns').style.display = 'none';
+    }
+
+    function showAnswer() {
+      document.getElementById('quiz-answer').style.display = 'block';
+      document.getElementById('tts-btn').style.display = 'block';
+      document.getElementById('show-answer-btn').style.display = 'none';
+      document.getElementById('result-btns').style.display = 'flex';
+
+      speakAnswer();
+    }
+
+    function speakAnswer() {
+      const text = document.getElementById('quiz-answer').innerText;
+      if (!text) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.9;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function submitResult(isCorrect) {
+      window.speechSynthesis.cancel();
+      const item = currentStudyList[currentIndex];
+      const dbItem = db.find(e => e.id === item.id);
+
+      if (dbItem) {
+        if (isCorrect) {
+          dbItem.stage = Math.min(dbItem.stage + 1, INTERVALS.length - 1);
+        } else {
+          dbItem.stage = 0;
+        }
+
+        const nextDays = INTERVALS[dbItem.stage];
+        const nextDate = new Date();
+        nextDate.setDate(nextDate.getDate() + nextDays);
+        dbItem.nextReview = nextDate.toISOString().split('T')[0];
+        saveData();
+      }
+
+      currentIndex++;
+      if (currentIndex < currentStudyList.length) {
+        renderQuiz();
+      } else {
+        alert("오늘의 복습을 모두 마쳤습니다! 수고하셨습니다.");
+        closeModal('study-modal');
+      }
+    }
+
+    function exportData() {
+      navigator.clipboard.writeText(JSON.stringify(db));
+      alert("데이터가 클립보드에 복사되었습니다.");
+    }
+
+    function clearAllData() {
+      if (confirm("정말 모든 회화 데이터를 초기화하시겠습니까?")) {
+        db = [];
+        saveData();
+      }
+    }
+
+    updateDashboard();
+  </script>
+</body>
+</html>
