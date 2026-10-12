@@ -36,7 +36,6 @@
     button.secondary { background: var(--inner-card); color: var(--text-main); }
     button.danger { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
 
-    /* 드롭다운 한 줄 배치 스타일 */
     .selector-row { display: flex; gap: 8px; margin-bottom: 10px; }
     select { flex: 1; background: var(--inner-card); color: var(--text-main); border: 1px solid #475569; padding: 12px; border-radius: 8px; font-size: 14px; outline: none; }
 
@@ -69,11 +68,10 @@
     </div>
   </div>
 
-  <!-- 동사 및 단계 선택형 진도 추가 섹션 (깔끔한 2중 드롭다운) -->
+  <!-- 동사 및 단계 선택형 진도 추가 섹션 (1~6일차 및 심화 지원) -->
   <div class="section-card">
     <div class="section-title">📚 진도 및 심화 과정 추가</div>
     <div class="selector-row">
-      <!-- 동사 선택 -->
       <select id="verbSelect">
         <option value="take">Take 동사</option>
         <option value="have">Have 동사</option>
@@ -81,12 +79,13 @@
         <option value="make">Make 동사</option>
         <option value="give">Give 동사</option>
       </select>
-      <!-- 과정/파트 선택 -->
       <select id="partSelect">
         <option value="part1">1일차 (Part 1)</option>
         <option value="part2">2일차 (Part 2)</option>
         <option value="part3">3일차 (Part 3)</option>
         <option value="part4">4일차 (Part 4)</option>
+        <option value="part5">5일차 (Part 5)</option>
+        <option value="part6">6일차 (Part 6)</option>
         <option value="deep">🔥 심화 응용 과정</option>
       </select>
     </div>
@@ -122,7 +121,7 @@
   </div>
 
   <script>
-    // 5대 동사별 [Part 1~4] 및 [심화 과정] 전체 데이터베이스 구조
+    // 5대 동사별 [Part 1~6] 및 [심화 과정] 전체 데이터베이스
     const COURSE_DATA = {
       take: {
         part1: [
@@ -141,6 +140,14 @@
           {q: "[Take 4일차] 저기, 저한테 내일 시간 좀 내줄 수 있어요?", a: "Can you take some time for me tomorrow?"},
           {q: "[Take 4일차] 우리를 위해 시간 내 주셔서 고마워요.", a: "Thank you for taking the time for us."}
         ],
+        part5: [
+          {q: "[Take 5일차] 저는 이 수업을 반 년 넘게 수강하고 있어요.", a: "I have been taking this class for over half a year."},
+          {q: "[Take 5일차] 난 이번 달에 이 과정 듣고 있어.", a: "I am taking this course this month."}
+        ],
+        part6: [
+          {q: "[Take 6일차] 오픽 시험 본 적 있어?", a: "Have you ever taken the OPIc test?"},
+          {q: "[Take 6일차] 나 내일 운전면허 시험 봐.", a: "I am taking a driver's license test tomorrow."}
+        ],
         deep: [
           {q: "[Take 심화] 공항까지 제 짐 좀 옮겨(가) 주실 수 있나요?", a: "Can you take my luggage to the airport?"},
           {q: "[Take 심화] 비 오니까 이 우산 가져가세요.", a: "Take this umbrella because it's raining."},
@@ -152,6 +159,8 @@
         part2: [{q: "[Have 2일차] 오늘 오후에 중요한 미팅이 잡혀 있어요.", a: "I have an important meeting scheduled this afternoon."}],
         part3: [{q: "[Have 3일차] 나중에 너랑 할 이야기가 좀 있어.", a: "I have something to talk about with you later."}],
         part4: [{q: "[Have 4일차] 그 문제를 해결할 좋은 아이디어가 있어요.", a: "I have a great idea to solve the problem."}],
+        part5: [{q: "[Have 5일차] 그에 대해 어떻게 생각하시는지 의견 좀 나눠주세요.", a: "Please share what you have in mind about that."}],
+        part6: [{q: "[Have 6일차] 내년이면 이 집에서 산 지 17년이 돼요.", a: "Next year, I will have lived in this house for 17 years."}],
         deep: [{q: "[Have 심화] 혹시 저한테 잔돈 있으신가요?", a: "Do you happen to have any change with you?"}]
       },
       get: {
@@ -159,6 +168,8 @@
         part2: [{q: "[Get 2일차] 거기 어떻게 가는지 알려주실 수 있나요?", a: "Can you tell me how to get there?"}],
         part3: [{q: "[Get 3일차] 요즘 일 때문에 너무 정신이 없어요.", a: "I am getting so busy with work these days."}],
         part4: [{q: "[Get 4일차] 퇴근길에 커피 한 잔 사다 줄 수 있어?", a: "Can you get me a cup of coffee on your way home?"}],
+        part5: [{q: "[Get 5일차] 이 문제에 대해 서로 이해가 일치하는지 확인해 보자.", a: "Let's make sure we get on the same page about this issue."}],
+        part6: [{q: "[Get 6일차] 이 프로젝트를 제때 끝마치도록 하자.", a: "Let's get this project done on time."}],
         deep: [{q: "[Get 심화] 그 소식을 듣고 정말 깜짝 놀랐어.", a: "I got really surprised when I heard the news."}]
       },
       make: {
@@ -166,6 +177,8 @@
         part2: [{q: "[Make 2일차] 주말에 가족들을 위해 요리를 좀 할 계획이에요.", a: "I am planning to make some food for my family this weekend."}],
         part3: [{q: "[Make 3일차] 제가 당신의 결정을 오해하게 만들어서 미안해요.", a: "I am sorry for making you misunderstand your decision."}],
         part4: [{q: "[Make 4일차] 내일 모임 시간 잊지 않도록 확실히 해줘.", a: "Make sure you don't forget the meeting time tomorrow."}],
+        part5: [{q: "[Make 5일차] 다음 주까지 이 보고서를 완성해야 합니다.", a: "We need to make this report ready by next week."}],
+        part6: [{q: "[Make 6일차] 그 제안은 정말 거절할 수 없는 좋은 기회였어.", a: "That offer was something I couldn't make any excuse to refuse."}],
         deep: [{q: "[Make 심화] 이 기계는 작동하기가 정말 쉬워요.", a: "This machine is really easy to make work."}]
       },
       give: {
@@ -173,6 +186,8 @@
         part2: [{q: "[Give 2일차] 제 사과를 받아주셨으면 좋겠어요.", a: "I hope you can give me a chance to apologize."}],
         part3: [{q: "[Give 3일차] 새로운 프로젝트에 대해 자세히 설명해 주세요.", a: "Please give me more details about the new project."}],
         part4: [{q: "[Give 4일차] 그 제안에 대해 생각할 시간을 좀 주세요.", a: "Give me some time to think about that proposal."}],
+        part5: [{q: "[Give 5일차] 내일 아침에 저한테 전화 한 번 주실래요?", a: "Could you give me a call tomorrow morning?"}],
+        part6: [{q: "[Give 6일차] 그 일에 대해 제 입장을 명확히 설명해 드릴게요.", a: "Let me give you a clear explanation of my position on that."}],
         deep: [{q: "[Give 심화] 제가 한 번 해볼 수 있게 기회를 주세요.", a: "Give me a chance to try it out."}]
       }
     };
@@ -201,7 +216,6 @@
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; updateDashboard(); }
 
-    // 드롭다운 선택값에 따라 진도 추가
     function addSelectedCourse() {
       const verb = document.getElementById('verbSelect').value;
       const part = document.getElementById('partSelect').value;
@@ -230,7 +244,7 @@
 
       saveData();
       if (addedCount > 0) {
-        alert(`${verb.toUpperCase()} (${part}) 문장 ${addedCount개가 추가되었습니다! 복습을 시작해보세요.`);
+        alert(`${verb.toUpperCase()} (${part}) 문장 ${addedCount}개가 추가되었습니다! 복습을 시작해보세요.`);
       } else {
         alert("이미 학습 진도에 추가되어 있는 문장들입니다.");
       }
