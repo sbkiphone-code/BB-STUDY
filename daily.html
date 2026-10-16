@@ -56,6 +56,13 @@
             cursor: pointer;
         }
         .btn-secondary:hover { background-color: #475569; }
+        .btn-accent {
+            background-color: #0ea5e9;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-accent:hover { background-color: #0284c7; }
         .btn-danger {
             background-color: #ef4444;
             border: none;
@@ -86,7 +93,7 @@
             </div>
 
             <button class="btn-primary" onclick="startDailyReview()">오늘의 전체 회화 복습 시작하기</button>
-            <button class="btn-secondary" style="margin-top: 10px;" onclick="startUnitReview()">🎯 선택한 유닛만 집중 복습하기</button>
+            <button class="btn-accent" style="margin-top: 10px;" onclick="startUnitReview()">🎯 선택한 유닛만 집중 복습하기</button>
         </div>
 
         <!-- 챕터별 진도 추가 (JSON 입력) -->
@@ -117,10 +124,14 @@
         </div>
     </div>
 
-    <!-- 학습 진행 영역 (모달 또는 화면 전환용) -->
-    <div id="studyArea" class="card-box" style="display: none;">
+    <!-- 학습 진행 영역 -->
+    <div id="studyArea" class="card-box" style="display: none; max-width: 500px; width: 100%;">
         <h2 id="studyTitle">학습 진행 중</h2>
-        <div id="questionBox" style="font-size: 1.2rem; margin: 20px 0; color: #38bdf8;">질문 내용</div>
+        <div id="questionBox" style="font-size: 1.1rem; margin: 15px 0; color: #38bdf8; line-height: 1.5;">질문 내용</div>
+        
+        <!-- 원어민 발음 듣기 버튼 복구 -->
+        <button class="btn-accent" onclick="playPronunciation()" style="margin-bottom: 10px;">🔊 원어민 발음 듣기</button>
+        
         <input type="text" id="answerInput" placeholder="영어 정답을 입력하거나 생각을 떠올려보세요" style="margin-bottom: 10px;">
         <button class="btn-primary" onclick="checkAnswer()">정답 확인 / 다음</button>
         <button class="btn-secondary" style="margin-top: 10px;" onclick="endStudy()">학습 종료</button>
@@ -190,11 +201,11 @@
             currentQueue = allCards.filter(card => !card.nextReviewDate || card.nextReviewDate <= today);
 
             if (currentQueue.length === 0) {
-                alert('오늘 복습할 대상 문장이 없습니다! 전체 문장으로 학습하시겠어요?');
+                alert('오늘 복습할 대상 문장이 없습니다! 전체 문장으로 학습을 시작합니다.');
                 currentQueue = allCards;
             }
             if (currentQueue.length === 0) {
-                alert('등록된 데이터가 없습니다.');
+                alert('등록된 데이터가 없습니다. JSON을 먼저 추가해 주세요.');
                 return;
             }
 
@@ -233,13 +244,29 @@
                 return;
             }
             const card = currentQueue[currentIndex];
-            document.getElementById('questionBox').innerHTML = `<b>[문제 ${currentIndex + 1}/${currentQueue.length}]</b><br>${card.q}`;
+            document.getElementById('questionBox').innerHTML = `<b>[문제 ${currentIndex + 1}/${currentQueue.length}]</b><br>❓ ${card.q}`;
             document.getElementById('answerInput').value = '';
+        }
+
+        // 원어민 발음 재생 함수 (Web Speech API 활용)
+        function playPronunciation() {
+            const card = currentQueue[currentIndex];
+            if (!card || !card.a) return;
+
+            // 브라우저 내장 음성 합성 기능 사용
+            const utterance = new SpeechSynthesisUtterance(card.a);
+            utterance.lang = 'en-US'; // 영어 원어민 발음
+            utterance.rate = 0.9;     // 학습용으로 약간 천천히 (0.9배속)
+            window.speechSynthesis.speak(utterance);
         }
 
         function checkAnswer() {
             const card = currentQueue[currentIndex];
-            alert(`정답: ${card.a}`);
+            alert(`💡 정답: ${card.a}`);
+            
+            // 정답 확인 시 자동으로 원어민 발음도 한 번 들려주기
+            playPronunciation();
+
             currentIndex++;
             loadNextCard();
         }
@@ -247,6 +274,7 @@
         function endStudy() {
             document.getElementById('studyArea').style.display = 'none';
             document.querySelector('.container').style.display = 'flex';
+            window.speechSynthesis.cancel(); // 재생 중인 음성 중지
             updateDashboardStats();
         }
 
