@@ -69,7 +69,7 @@
 <body>
 
     <div class="container">
-        <!-- 상단 망각 곡선 대시보드 (원래 화면 복구) -->
+        <!-- 상단 망각 곡선 대시보드 -->
         <div class="card-box" style="text-align: center;">
             <div style="font-size: 0.9rem; color: #38bdf8; font-weight: bold; margin-bottom: 5px;">💬 일상회화 영작 학습</div>
             <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 15px;">교재 기반 망각곡선 맞춤 회화 트레이닝</div>
@@ -80,13 +80,13 @@
                     <div id="totalCount" style="font-size: 1.8rem; font-weight: bold; color: #38bdf8;">0</div>
                 </div>
                 <div>
-                    <div style="font-size: 0.85rem; color: #94a3b8;">오늘 복습</div>
+                    <div style="font-size: 0.85rem; color: #94a3b8;">오늘 복습 대상</div>
                     <div id="reviewCount" style="font-size: 1.8rem; font-weight: bold; color: #f43f5e;">0</div>
                 </div>
             </div>
 
-            <button class="btn-primary" onclick="startDailyReview()">오늘의 회화 복습 시작하기</button>
-            <button class="btn-secondary" style="margin-top: 10px;" onclick="viewNewItems()">🆕 오늘 새로 추가된 내용 보기</button>
+            <button class="btn-primary" onclick="startDailyReview()">오늘의 전체 회화 복습 시작하기</button>
+            <button class="btn-secondary" style="margin-top: 10px;" onclick="startUnitReview()">🎯 선택한 유닛만 집중 복습하기</button>
         </div>
 
         <!-- 챕터별 진도 추가 (JSON 입력) -->
@@ -112,36 +112,41 @@
 
         <!-- 데이터 관리 -->
         <div class="control-box">
-            <button class="btn-secondary" onclick="alert('준비 중인 기능입니다.')">데이터 백업 (복사)</button>
+            <button class="btn-secondary" onclick="exportData()">데이터 백업 (복사)</button>
             <button class="btn-danger" style="margin-top: 10px;" onclick="resetAllData()">전체 데이터 초기화</button>
         </div>
     </div>
 
+    <!-- 학습 진행 영역 (모달 또는 화면 전환용) -->
+    <div id="studyArea" class="card-box" style="display: none;">
+        <h2 id="studyTitle">학습 진행 중</h2>
+        <div id="questionBox" style="font-size: 1.2rem; margin: 20px 0; color: #38bdf8;">질문 내용</div>
+        <input type="text" id="answerInput" placeholder="영어 정답을 입력하거나 생각을 떠올려보세요" style="margin-bottom: 10px;">
+        <button class="btn-primary" onclick="checkAnswer()">정답 확인 / 다음</button>
+        <button class="btn-secondary" style="margin-top: 10px;" onclick="endStudy()">학습 종료</button>
+    </div>
+
     <script>
+        let currentQueue = [];
+        let currentIndex = 0;
+
         window.onload = function() {
             updateDashboardStats();
         };
 
-        // 로컬 스토리지 데이터 불러오기
         function getAllCards() {
             return JSON.parse(localStorage.getItem('englishCards') || '[]');
         }
 
-        // 대시보드 통계 업데이트 (전체 문장 및 오늘 복습 대상 계산)
         function updateDashboardStats() {
             const allCards = getAllCards();
             const today = new Date().toISOString().split('T')[0];
-
-            // 오늘 복습해야 할 카드 계산 (nextReviewDate가 오늘 이전이거나 오늘인 경우)
-            const dueCards = allCards.filter(card => {
-                return !card.nextReviewDate || card.nextReviewDate <= today;
-            });
+            const dueCards = allCards.filter(card => !card.nextReviewDate || card.nextReviewDate <= today);
 
             document.getElementById('totalCount').innerText = allCards.length;
             document.getElementById('reviewCount').innerText = dueCards.length;
         }
 
-        // JSON 데이터 추가 (챕터 및 유닛 정보 포함)
         function importJsonData() {
             const rawText = document.getElementById('jsonInput').value.trim();
             if (!rawText) {
@@ -160,7 +165,7 @@
                     a: item.a,
                     chapter: currentChapter,
                     unit: currentUnit,
-                    nextReviewDate: today, // 추가된 날부터 학습 시작
+                    nextReviewDate: today,
                     interval: 0,
                     repetition: 0
                 }));
@@ -178,22 +183,80 @@
             }
         }
 
-        // 오늘의 회화 복습 시작
+        // 오늘의 전체 복습 시작
         function startDailyReview() {
             const allCards = getAllCards();
-            if (allCards.length === 0) {
-                alert('등록된 학습 데이터가 없습니다. 먼저 JSON 데이터를 추가해 주세요.');
+            const today = new Date().toISOString().split('T')[0];
+            currentQueue = allCards.filter(card => !card.nextReviewDate || card.nextReviewDate <= today);
+
+            if (currentQueue.length === 0) {
+                alert('오늘 복습할 대상 문장이 없습니다! 전체 문장으로 학습하시겠어요?');
+                currentQueue = allCards;
+            }
+            if (currentQueue.length === 0) {
+                alert('등록된 데이터가 없습니다.');
                 return;
             }
-            alert(`총 ${allCards.length}개 문장 중 오늘 복습할 문장들로 학습을 시작합니다!`);
+
+            currentIndex = 0;
+            showStudyScreen("오늘의 전체 복습");
         }
 
-        // 오늘 새로 추가된 내용 보기
-        function viewNewItems() {
-            alert('오늘 새로 추가된 내용 보기 기능입니다.');
+        // 선택한 유닛만 집중 복습 시작
+        function startUnitReview() {
+            const allCards = getAllCards();
+            const selChapter = document.getElementById('chapterSelect').value;
+            const selUnit = document.getElementById('unitSelect').value;
+
+            currentQueue = allCards.filter(card => card.chapter === selChapter && card.unit === selUnit);
+
+            if (currentQueue.length === 0) {
+                alert(`[${selChapter} ${selUnit}]에 등록된 데이터가 없습니다.`);
+                return;
+            }
+
+            currentIndex = 0;
+            showStudyScreen(`${selChapter} ${selUnit} 집중 복습`);
         }
 
-        // 전체 데이터 초기화
+        function showStudyScreen(title) {
+            document.querySelector('.container').style.display = 'none';
+            document.getElementById('studyArea').style.display = 'block';
+            document.getElementById('studyTitle').innerText = title;
+            loadNextCard();
+        }
+
+        function loadNextCard() {
+            if (currentIndex >= currentQueue.length) {
+                alert('모든 학습을 완료했습니다!');
+                endStudy();
+                return;
+            }
+            const card = currentQueue[currentIndex];
+            document.getElementById('questionBox').innerHTML = `<b>[문제 ${currentIndex + 1}/${currentQueue.length}]</b><br>${card.q}`;
+            document.getElementById('answerInput').value = '';
+        }
+
+        function checkAnswer() {
+            const card = currentQueue[currentIndex];
+            alert(`정답: ${card.a}`);
+            currentIndex++;
+            loadNextCard();
+        }
+
+        function endStudy() {
+            document.getElementById('studyArea').style.display = 'none';
+            document.querySelector('.container').style.display = 'flex';
+            updateDashboardStats();
+        }
+
+        function exportData() {
+            const dataStr = localStorage.getItem('englishCards') || '[]';
+            navigator.clipboard.writeText(dataStr).then(() => {
+                alert('전체 데이터가 클립보드에 복사되었습니다!');
+            });
+        }
+
         function resetAllData() {
             if (confirm('정말로 모든 데이터를 초기화하시겠습니까?')) {
                 localStorage.removeItem('englishCards');
