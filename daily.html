@@ -40,7 +40,7 @@
             font-size: 1rem;
             box-sizing: border-box;
         }
-        textarea { height: 100px; resize: vertical; }
+        textarea { height: 90px; resize: vertical; }
         .btn-primary {
             background-color: #6366f1;
             border: none;
@@ -49,6 +49,13 @@
             transition: background 0.2s;
         }
         .btn-primary:hover { background-color: #4f46e5; }
+        .btn-secondary {
+            background-color: #334155;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-secondary:hover { background-color: #475569; }
         .btn-danger {
             background-color: #ef4444;
             border: none;
@@ -62,32 +69,36 @@
 <body>
 
     <div class="container">
-        <!-- 상단 대시보드 및 학습 시작 -->
+        <!-- 상단 망각 곡선 대시보드 (원래 화면 복구) -->
         <div class="card-box" style="text-align: center;">
-            <h2>일상회화 영작 학습</h2>
+            <div style="font-size: 0.9rem; color: #38bdf8; font-weight: bold; margin-bottom: 5px;">💬 일상회화 영작 학습</div>
+            <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 15px;">교재 기반 망각곡선 맞춤 회화 트레이닝</div>
+            
             <div style="display: flex; justify-content: space-around; margin: 15px 0;">
                 <div>
                     <div style="font-size: 0.85rem; color: #94a3b8;">전체 문장</div>
-                    <div id="totalCount" style="font-size: 1.5rem; font-weight: bold; color: #38bdf8;">0</div>
+                    <div id="totalCount" style="font-size: 1.8rem; font-weight: bold; color: #38bdf8;">0</div>
                 </div>
                 <div>
-                    <div style="font-size: 0.85rem; color: #94a3b8;">선택 유닛 문장</div>
-                    <div id="unitCount" style="font-size: 1.5rem; font-weight: bold; color: #f43f5e;">0</div>
+                    <div style="font-size: 0.85rem; color: #94a3b8;">오늘 복습</div>
+                    <div id="reviewCount" style="font-size: 1.8rem; font-weight: bold; color: #f43f5e;">0</div>
                 </div>
             </div>
-            <button class="btn-primary" onclick="startStudySession()">선택한 유닛 복습 시작하기</button>
+
+            <button class="btn-primary" onclick="startDailyReview()">오늘의 회화 복습 시작하기</button>
+            <button class="btn-secondary" style="margin-top: 10px;" onclick="viewNewItems()">🆕 오늘 새로 추가된 내용 보기</button>
         </div>
 
         <!-- 챕터별 진도 추가 (JSON 입력) -->
         <div class="control-box">
             <h2>📚 챕터별 진도 추가</h2>
             <div class="row">
-                <select id="chapterSelect" onchange="updateUnitCount()">
+                <select id="chapterSelect">
                     <option value="Chapter 1">Chapter 1</option>
                     <option value="Chapter 2">Chapter 2</option>
                     <option value="Chapter 3">Chapter 3</option>
                 </select>
-                <select id="unitSelect" onchange="updateUnitCount()">
+                <select id="unitSelect">
                     <option value="Unit 1">Unit 1</option>
                     <option value="Unit 2">Unit 2</option>
                     <option value="Unit 3">Unit 3</option>
@@ -101,35 +112,36 @@
 
         <!-- 데이터 관리 -->
         <div class="control-box">
-            <button class="btn-primary" style="background-color: #334155;" onclick="alert('준비 중인 기능입니다.')">데이터 백업 (복사)</button>
+            <button class="btn-secondary" onclick="alert('준비 중인 기능입니다.')">데이터 백업 (복사)</button>
             <button class="btn-danger" style="margin-top: 10px;" onclick="resetAllData()">전체 데이터 초기화</button>
         </div>
     </div>
 
     <script>
-        // 페이지 로드 시 카운트 업데이트
         window.onload = function() {
-            updateUnitCount();
+            updateDashboardStats();
         };
 
-        // 로컬 스토리지에서 전체 데이터 가져오기
+        // 로컬 스토리지 데이터 불러오기
         function getAllCards() {
             return JSON.parse(localStorage.getItem('englishCards') || '[]');
         }
 
-        // 현재 선택된 챕터와 유닛의 문장 수 계산 및 화면 갱신
-        function updateUnitCount() {
+        // 대시보드 통계 업데이트 (전체 문장 및 오늘 복습 대상 계산)
+        function updateDashboardStats() {
             const allCards = getAllCards();
-            const currentChapter = document.getElementById('chapterSelect').value;
-            const currentUnit = document.getElementById('unitSelect').value;
+            const today = new Date().toISOString().split('T')[0];
 
-            const filtered = allCards.filter(card => card.chapter === currentChapter && card.unit === currentUnit);
+            // 오늘 복습해야 할 카드 계산 (nextReviewDate가 오늘 이전이거나 오늘인 경우)
+            const dueCards = allCards.filter(card => {
+                return !card.nextReviewDate || card.nextReviewDate <= today;
+            });
 
             document.getElementById('totalCount').innerText = allCards.length;
-            document.getElementById('unitCount').innerText = filtered.length;
+            document.getElementById('reviewCount').innerText = dueCards.length;
         }
 
-        // JSON 데이터 추가 (선택된 챕터·유닛 태그 자동 부여)
+        // JSON 데이터 추가 (챕터 및 유닛 정보 포함)
         function importJsonData() {
             const rawText = document.getElementById('jsonInput').value.trim();
             if (!rawText) {
@@ -141,23 +153,24 @@
                 const rawData = JSON.parse(rawText);
                 const currentChapter = document.getElementById('chapterSelect').value;
                 const currentUnit = document.getElementById('unitSelect').value;
+                const today = new Date().toISOString().split('T')[0];
 
-                // 각 문장 객체에 현재 선택된 챕터와 유닛 정보를 강제로 심어줌
                 const newCards = rawData.map(item => ({
                     q: item.q,
                     a: item.a,
                     chapter: currentChapter,
                     unit: currentUnit,
-                    nextReviewDate: new Date().toISOString().split('T')[0]
+                    nextReviewDate: today, // 추가된 날부터 학습 시작
+                    interval: 0,
+                    repetition: 0
                 }));
 
                 let allCards = getAllCards();
-                // 기존 데이터에 합치기
                 allCards = allCards.concat(newCards);
                 localStorage.setItem('englishCards', JSON.stringify(allCards));
 
                 document.getElementById('jsonInput').value = '';
-                updateUnitCount();
+                updateDashboardStats();
                 alert(`[${currentChapter} ${currentUnit}]에 ${newCards.length}개의 데이터가 성공적으로 추가되었습니다!`);
             } catch (e) {
                 alert('JSON 형식이 올바르지 않습니다. 코드를 다시 확인해 주세요.');
@@ -165,30 +178,26 @@
             }
         }
 
-        // 선택된 유닛의 카드만 필터링하여 학습 시작
-        function startStudySession() {
+        // 오늘의 회화 복습 시작
+        function startDailyReview() {
             const allCards = getAllCards();
-            const currentChapter = document.getElementById('chapterSelect').value;
-            const currentUnit = document.getElementById('unitSelect').value;
-
-            const targetCards = allCards.filter(card => card.chapter === currentChapter && card.unit === currentUnit);
-
-            if (targetCards.length === 0) {
-                alert(`[${currentChapter} ${currentUnit}]에 등록된 학습 데이터가 없습니다. 먼저 JSON을 추가해 주세요.`);
+            if (allCards.length === 0) {
+                alert('등록된 학습 데이터가 없습니다. 먼저 JSON 데이터를 추가해 주세요.');
                 return;
             }
+            alert(`총 ${allCards.length}개 문장 중 오늘 복습할 문장들로 학습을 시작합니다!`);
+        }
 
-            // 테스트용 알림 (실제 학습 화면 전환 코드로 연결하시면 됩니다)
-            alert(`[${currentChapter} ${currentUnit}] 총 ${targetCards.length}개 문장으로 학습을 시작합니다!`);
-            console.log("학습 대상 카드 목록:", targetCards);
-            // 예: window.location.href = "study.html"; 등 필요에 따라 연결
+        // 오늘 새로 추가된 내용 보기
+        function viewNewItems() {
+            alert('오늘 새로 추가된 내용 보기 기능입니다.');
         }
 
         // 전체 데이터 초기화
         function resetAllData() {
             if (confirm('정말로 모든 데이터를 초기화하시겠습니까?')) {
                 localStorage.removeItem('englishCards');
-                updateUnitCount();
+                updateDashboardStats();
                 alert('초기화되었습니다.');
             }
         }
